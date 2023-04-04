@@ -43,6 +43,7 @@ public class ArUcoMarkerParam : Param
 [Serializable]
 class ExperimentParam : Param
 {
+    public bool bCreateKFMethod; //트루이면 without Desc, false이면 with Desc
     public bool bEdgeBase;
     public bool bHost; //등록 모드 일 때
     public bool bRegistrationTest;

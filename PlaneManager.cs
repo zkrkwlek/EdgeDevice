@@ -8,12 +8,14 @@ public class UVR_Plane
 {
     public Plane plane;
     public int mnTTL;
+    public int nObservation;
     public int mnId;
     public UVR_Plane(int id, float x, float y, float z, float d, int _skip = 4)
     {
         mnId = id;
         Vector3 normal = new Vector3(x, y, z);
         plane = new Plane(normal, d);
+        nObservation = 0;
         mnTTL = _skip;
     }
     public Vector3 CreatePoint(Vector3 origin, Vector3 dir) {
@@ -95,6 +97,8 @@ public class PlaneManager : MonoBehaviour
     //Dictionary<int, UVR_Plane> Planes;
     Dictionary<int, UVR_Plane> Planes;
 
+    public ContentManage mContentManager;
+
     // Start is called before the first frame update
     void Awake()
     {
@@ -118,6 +122,7 @@ public class PlaneManager : MonoBehaviour
                 if(p.mnId != 0 && p.mnId == 1)
                     removePlaneIDs.Add(p.mnId);
             }
+            Planes.Remove(p.mnId);
         }
         for (int i = 0; i < removePlaneIDs[i]; i++)
             Planes.Remove(i);
@@ -126,12 +131,31 @@ public class PlaneManager : MonoBehaviour
     public void AddPlane(int id, float x, float y, float z, float d, int _skip = 5) {
         var p = new UVR_Plane(id, x, y, z, d, _skip);
         Planes.Add(id, p);
+        
         //Planes.Add(p);
     }
     public bool CheckPlane(int id)
     {
         return Planes.ContainsKey(id);
     }
+    public void UpdateLocalPlane(int fid, float[] fdata)
+    {
+        int N = (int)fdata[0];
+        int idx = 1;
+        for (int j = 0; j < N; j++)
+        {
+            int pid = (int)fdata[idx];
+            float nx = fdata[idx + 1];
+            float ny = fdata[idx + 2];
+            float nz = fdata[idx + 3];
+            float d = fdata[idx + 4];
+            idx += 5;
+            //mText.text = id + " " + nx + " " + ny + " " + nz;
+            //mPlaneManager.AddPlane(id, nx, ny, nz, d);
+            UpdatePlane(pid, nx, ny, nz, d);
+        }
+    }
+
     public void UpdatePlane(int id, float x, float y, float z, float d)
     {
         y = -y;

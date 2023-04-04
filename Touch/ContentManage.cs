@@ -4,6 +4,44 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+class VirtualFrame
+{
+    public int fid;
+    List<Content> ContentList;
+    List<UVR_Plane> PlaneList;
+    public VirtualFrame(int id)
+    {
+        fid = id;
+        ContentList = new List<Content>();
+        PlaneList = new List<UVR_Plane>();
+    }
+    public void AddContent(Content c) {
+        //if (!ContentList.Contains(c))
+        //{
+            
+        //}
+        ContentList.Add(c);
+        c.nObservation++;
+    }
+
+    public void AddPlane(UVR_Plane p)
+    {
+        PlaneList.Add(p);
+        p.nObservation++;
+    }
+
+    public void RemoveObservation()
+    {
+        foreach(Content c in ContentList)
+        {
+            c.nObservation--;
+        }
+        foreach (UVR_Plane p in PlaneList)
+        {
+            p.nObservation--;
+        }
+    }
+}
 
 public class Content
 {
@@ -11,6 +49,7 @@ public class Content
     public GameObject obj;
     public Vector3 s, e;
     public int nTTL;
+    public int nObservation;
     public bool visible;
     public Content(int id, GameObject model, float fScale, Vector3 _s, Vector3 _e, int _TTL, Text mtext) {
 
@@ -40,8 +79,8 @@ public class Content
         {
             mtext.text = e.ToString();
         }
-        
-        
+
+        nObservation = 0;
         nTTL = _TTL;
         visible = true;
     }
@@ -63,6 +102,7 @@ public class Content
             mtext.text = e.ToString();
         }
 
+        nObservation = 0;
         nTTL = _TTL;
         visible = true;
     }
@@ -77,7 +117,9 @@ public class ContentManage : MonoBehaviour
     public Dictionary<int, Content> ContentDictionary;
     public ParameterManager mParamManager;
     ObjectParam mObjParam;
-    
+
+    Queue<VirtualFrame> VirtualFrameQueue;
+
     // Start is called before the first frame update
     public bool CheckContent(int id)
     {
@@ -115,6 +157,7 @@ public class ContentManage : MonoBehaviour
     {
         ContentDictionary = new Dictionary<int, Content>();
         mObjParam = (ObjectParam)mParamManager.DictionaryParam["VirtualObject"];
+        VirtualFrameQueue = new Queue<VirtualFrame>();
     }
     void Start()
     {
@@ -148,9 +191,8 @@ public class ContentManage : MonoBehaviour
     {
         foreach (int id in ContentDictionary.Keys)
         {
-
             ContentDictionary[id].nTTL--;
-            if (ContentDictionary[id].nTTL <= 0)
+            if (ContentDictionary[id].nObservation <= 0)
             {
                 ContentDictionary[id].obj.SetActive(false);
             }
@@ -195,6 +237,46 @@ public class ContentManage : MonoBehaviour
         }catch(Exception e)
         {
             mText.text = e.ToString();
+        }
+    }
+
+    public void UpdateVirtualFrame(int fid, float[] fdata)
+    {
+        var newVF = new VirtualFrame(fid);
+
+        int N = (int)fdata[0];
+        int idx = 1;
+        for (int j = 0; j < N; j++)
+        {
+            int id = (int)fdata[idx];
+            int mid = (int)fdata[idx + 1];
+            float b = fdata[idx + 2];
+            float x = fdata[idx + 3];
+            float y = fdata[idx + 4];
+            float z = fdata[idx + 5];
+            float ex = fdata[idx + 6];
+            float ey = fdata[idx + 7];
+            float ez = fdata[idx + 8];
+
+            idx += 9;
+            if (b > 0.0)
+            {
+                PathProcess(id, x, y, z, ex, ey, ez);
+            }
+            else
+            {
+                //mText.text = "ctest222222222";
+                Process(id, x, y, z);
+            }
+            newVF.AddContent(ContentDictionary[id]);
+        }
+
+        //new 내의 연결
+        VirtualFrameQueue.Enqueue(newVF);
+        if(VirtualFrameQueue.Count > 5)
+        {
+            var oldVF = VirtualFrameQueue.Dequeue();
+            oldVF.RemoveObservation();
         }
     }
 }

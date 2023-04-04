@@ -39,24 +39,13 @@ public class UDPProcessor
 public class DataReceiver : MonoBehaviour
 {
 
-#if UNITY_EDITOR_WIN
-    [DllImport("UnityLibrary")]
-    private static extern int CreateReferenceFrame(int id, IntPtr data);
-    [DllImport("UnityLibrary")]
-    private static extern void UpdateLocalMap(int id, int n, IntPtr data);
-#elif UNITY_ANDROID
-    [DllImport("edgeslam")]
-    private static extern int CreateReferenceFrame(int id, IntPtr data);    
-    [DllImport("edgeslam")]
-    private static extern void UpdateLocalMap(int id, int n, IntPtr data);    
-#endif
-
     public Text mText;
     //public ScaleAdjuster mScaleAdjuster;
     public PlaneManager mPlaneManager;
     public ContentManage mContentManager;
     public SystemManager mSystemManager;
     public ObjectDetection mObjectDetection;
+    public Tracker mTracker;
 
     UnityWebRequest GetRequest(string keyword, int id)
     {
@@ -155,7 +144,8 @@ public class DataReceiver : MonoBehaviour
                     
                     GCHandle handle = GCHandle.Alloc(fdata, GCHandleType.Pinned);
                     IntPtr ptr = handle.AddrOfPinnedObject();
-                    int a = CreateReferenceFrame(data.id, ptr);
+                    //int a = CreateReferenceFrame(data.id, ptr);
+                    mTracker.CreateKeyFrame(data.id,ptr);
                     handle.Free();
                     //mText.text = "Queue Test = " + a;
                 }
@@ -226,7 +216,8 @@ public class DataReceiver : MonoBehaviour
                 {
                     GCHandle handle = GCHandle.Alloc(req1.downloadHandler.data, GCHandleType.Pinned);
                     IntPtr ptr = handle.AddrOfPinnedObject();
-                    UpdateLocalMap(data.id, n, ptr);
+                    mTracker.UpdateData(data.id, n, ptr);
+                    //UpdateLocalMap(data.id, n, ptr);
                     handle.Free();
                 }
                 catch (Exception e)
@@ -323,20 +314,7 @@ public class DataReceiver : MonoBehaviour
             {
                 float[] fdata = new float[req1.downloadHandler.data.Length / 4];
                 Buffer.BlockCopy(req1.downloadHandler.data, 0, fdata, 0, req1.downloadHandler.data.Length);
-                int N = (int)fdata[0];
-                int idx = 1;
-                for (int j = 0; j < N; j++) {
-                    int pid = (int)fdata[idx];
-                    float nx = fdata[idx+1];
-                    float ny = fdata[idx+2];
-                    float nz = fdata[idx+3];
-                    float d = fdata[idx+4];
-                    idx += 5;
-                    //mText.text = id + " " + nx + " " + ny + " " + nz;
-                    //mPlaneManager.AddPlane(id, nx, ny, nz, d);
-                    mPlaneManager.UpdatePlane(pid, nx, ny, nz, d);
-                }
-
+                mPlaneManager.UpdateLocalPlane(data.id, fdata);
 
                 //game object를 생성한 후 시간 지나면 삭제하는 것을 목표로
 
@@ -360,31 +338,7 @@ public class DataReceiver : MonoBehaviour
             {
                 float[] fdata = new float[req1.downloadHandler.data.Length / 4];
                 Buffer.BlockCopy(req1.downloadHandler.data, 0, fdata, 0, req1.downloadHandler.data.Length);
-                int N = (int)fdata[0];
-                int idx = 1;
-                for (int j = 0; j < N; j++)
-                {
-                    int id = (int)fdata[idx];
-                    int mid = (int)fdata[idx + 1];
-                    float b = fdata[idx + 2];
-                    float x = fdata[idx + 3];
-                    float y = fdata[idx + 4];
-                    float z = fdata[idx + 5];
-                    float ex = fdata[idx + 6];
-                    float ey = fdata[idx + 7];
-                    float ez = fdata[idx + 8];
-                    
-                    idx += 9;
-                    if (b > 0.0)
-                    {
-                        mContentManager.PathProcess(id, x, y, z, ex, ey, ez);
-                    }
-                    else {
-                        //mText.text = "ctest222222222";
-                        mContentManager.Process(id, x, y, z);
-                    }
-                    
-                }
+                mContentManager.UpdateVirtualFrame(data.id,fdata);
             }
         }
         if (data.keyword == "MarkerRegistrations") //나중에 키워드 변경

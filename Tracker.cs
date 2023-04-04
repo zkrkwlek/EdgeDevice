@@ -18,6 +18,14 @@ public class Tracker : MonoBehaviour
     private static extern bool Localization(IntPtr texdata, IntPtr posedata, int id, double ts, int nQuality, bool bTracking, bool bVisualization);
     [DllImport("UnityLibrary")]
     private static extern bool NeedNewKeyFrame(int fid);
+
+    [DllImport("UnityLibrary")]
+    private static extern int CreateReferenceFrame(int id, IntPtr data);
+    [DllImport("UnityLibrary")]
+    private static extern int CreateReferenceFrame2(int id, IntPtr data);
+    [DllImport("UnityLibrary")]
+    private static extern void UpdateLocalMap(int id, int n, IntPtr data);
+
 #elif UNITY_ANDROID
     [DllImport("edgeslam")]
     private static extern void SetIMUAddress(IntPtr addr, bool bIMU);
@@ -25,6 +33,13 @@ public class Tracker : MonoBehaviour
     private static extern bool Localization(IntPtr texdata, IntPtr posedata, int id, double ts, int nQuality, bool bTracking, bool bVisualization);
     [DllImport("edgeslam")]
     private static extern bool NeedNewKeyFrame(int fid);
+
+    [DllImport("edgeslam")]
+    private static extern int CreateReferenceFrame(int id, IntPtr data);    
+    [DllImport("edgeslam")]
+    private static extern int CreateReferenceFrame2(int id, IntPtr data);    
+    [DllImport("edgeslam")]
+    private static extern void UpdateLocalMap(int id, int n, IntPtr data);    
 #endif
     public SystemManager mManager;
     public ParameterManager mParamManager;
@@ -116,6 +131,24 @@ public class Tracker : MonoBehaviour
     {
         
     }
+
+    public void CreateKeyFrame(int id, IntPtr ptr)
+    {
+        if (mExParam.bCreateKFMethod)
+        {
+            CreateReferenceFrame(id, ptr);
+        }
+        else
+        {
+            CreateReferenceFrame2(id, ptr);
+        }
+    }
+
+    public void UpdateData(int id, int n, IntPtr ptr)
+    {
+        UpdateLocalMap(id, n, ptr);
+    }
+
 
     // Update is called once per frame
     void Update()

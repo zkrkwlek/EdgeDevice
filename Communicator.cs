@@ -220,7 +220,8 @@ public class Communicator : MonoBehaviour
             bdata2[nbFlagIdx + 3] = mSystemManager.User.bSaveTrajectory ? (byte)1 : (byte)0;
             bdata2[nbFlagIdx + 4] = mSystemManager.User.ModeAsyncQualityTest ? (byte)1 : (byte)0;
             bdata2[nbFlagIdx + 5] = mExParam.bEdgeBase ? (byte)1 : (byte)0;
-            
+            bdata2[nbFlagIdx + 6] = mExParam.bCreateKFMethod ? (byte)1 : (byte)0;
+
             //인트린직 파라메터
             Buffer.BlockCopy(fdataa, 0, bdata2, 0, nbFlagIdx);
             //플래그 데이터
