@@ -11,7 +11,6 @@ using UnityEngine.UI;
 public class TestManager : MonoBehaviour
 {
     //public CameraManager mCamManager;
-    public PointCloudManager mPointManager;
     public DataSender mSender;
     public SystemManager mSystemManager;
     public Text mText;
@@ -74,18 +73,6 @@ public class TestManager : MonoBehaviour
     }
 
     ////마커 전송할 때의 아이디 기록
-
-    void OnPointUpdated(object sender, PointCloudUpdateEventArgs e)
-    {
-        try
-        {
-            points = e.points;
-            mnPoints = e.mnNumPoints;
-        }
-        catch (Exception ex) {
-            mText.text = ex.ToString();
-        }
-    }
 
     int prevID = -1;
     //이미지 전송

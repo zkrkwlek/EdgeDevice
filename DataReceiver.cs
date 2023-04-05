@@ -42,7 +42,7 @@ public class DataReceiver : MonoBehaviour
     public Text mText;
     //public ScaleAdjuster mScaleAdjuster;
     public PlaneManager mPlaneManager;
-    public ContentManage mContentManager;
+    public ContentProcessor mContentManager;
     public SystemManager mSystemManager;
     public ObjectDetection mObjectDetection;
     public Tracker mTracker;

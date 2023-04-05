@@ -201,7 +201,8 @@ public class PointCloudProcess : MonoBehaviour
             }
             m_ParticleSystem.SetParticles(m_Particles, numParticles);
 
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             mText.text = e.ToString();
         }

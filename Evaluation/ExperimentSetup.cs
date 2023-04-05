@@ -44,6 +44,10 @@ public class ExperimentSetup : MonoBehaviour
             {
                 rKeywords += ",ObjectDetection,single";
             }
+            if (param.bDrawTest)
+            {
+                sKeywords += ",VO.DRAW";
+            }
             if (param.bEdgeBase)
             {
                 sKeywords += ",ReqUpdateLocalMap";

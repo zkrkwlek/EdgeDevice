@@ -17,7 +17,15 @@ public class ObjectParam : Param
     public float fWalkingObjScale;
     public float fTempObjScale;
 }
-
+[Serializable]
+public class DrawPaintParam : Param
+{
+    public float r;
+    public float g;
+    public float b;
+    public float a;
+    public float size;
+}
 [Serializable]
 class TrackerParam : Param
 {
@@ -49,6 +57,7 @@ class ExperimentParam : Param
     public bool bRegistrationTest;
     public bool bManipulationTest;
     public bool bPathTest;
+    public bool bDrawTest;
     public bool bObjectDetection;
 }
 
@@ -61,14 +70,16 @@ public class ParameterManager : MonoBehaviour
     ArUcoMarkerParam mMarkerParam;
     ExperimentParam mExperimentParam;
     ObjectParam mObjParam;
+    DrawPaintParam mDrawParam;
     Param mTimeServerParam;
-
+    
     bool WantsToQuit()
     {
         File.WriteAllText(dirPath + "/Tracker.json", JsonUtility.ToJson(mTrackerParam));
         File.WriteAllText(dirPath + "/MarkerParam.json", JsonUtility.ToJson(mMarkerParam));
         File.WriteAllText(dirPath + "/ExperimentParam.json", JsonUtility.ToJson(mExperimentParam));
         File.WriteAllText(dirPath + "/ObjectParam.json", JsonUtility.ToJson(mObjParam));
+        File.WriteAllText(dirPath + "/DrawPaintParam.json", JsonUtility.ToJson(mDrawParam));
         File.WriteAllText(dirPath + "/TimeServer.json", JsonUtility.ToJson(mTimeServerParam));
         return true;
     }
@@ -137,6 +148,23 @@ public class ParameterManager : MonoBehaviour
         }
         //파라메터 로드
 
+        //그림 페인트 설정
+        try
+        {
+            string strAddData = File.ReadAllText(dirPath + "/DrawPaintParam.json");
+            mDrawParam = JsonUtility.FromJson<DrawPaintParam>(strAddData);
+        }
+        catch (Exception e)
+        {
+            mDrawParam = new DrawPaintParam();
+            mDrawParam.r = 0f;
+            mDrawParam.g = 1f;
+            mDrawParam.b = 1f;
+            mDrawParam.a = 1f;
+            mDrawParam.size = 0.05f;
+        }
+        //그림 페인트 설정
+
         //타임 서버
         try
         {
@@ -157,6 +185,7 @@ public class ParameterManager : MonoBehaviour
             DictionaryParam.Add("Marker", mMarkerParam);
             DictionaryParam.Add("VirtualObject", mObjParam);
             DictionaryParam.Add("TimeServer", mTimeServerParam);
+            DictionaryParam.Add("DrawPaint", mDrawParam);
         }
         catch(Exception ex)
         {

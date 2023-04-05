@@ -1,3 +1,4 @@
+using OpenCVForUnity.CoreModule;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -97,7 +98,7 @@ public class PlaneManager : MonoBehaviour
     //Dictionary<int, UVR_Plane> Planes;
     Dictionary<int, UVR_Plane> Planes;
 
-    public ContentManage mContentManager;
+    public VOFrameManager mVOFrameManager;
 
     // Start is called before the first frame update
     void Awake()
@@ -112,20 +113,32 @@ public class PlaneManager : MonoBehaviour
     {
         //var planes = Planes.Values;
         ////TTL 관리
-        List<int> removePlaneIDs = new List<int>(); 
-        foreach(UVR_Plane p in Planes.Values)
+        foreach (UVR_Plane p in Planes.Values)
         {
-            p.mnTTL--;
-            if(p.mnTTL <= 0)
-            {
-                //삭제 및 종료
-                if(p.mnId != 0 && p.mnId == 1)
-                    removePlaneIDs.Add(p.mnId);
-            }
-            Planes.Remove(p.mnId);
+            //p.mnTTL--;
+            //if (p.mnTTL <= 0)
+            //{
+            //    //삭제 및 종료
+            //    if (p.mnId != 0 && p.mnId == 1)
+            //        removePlaneIDs.Add(p.mnId);
+            //}
+            if(p.mnId > 0 && p.nObservation <=0)
+                Planes.Remove(p.mnId);
         }
-        for (int i = 0; i < removePlaneIDs[i]; i++)
-            Planes.Remove(i);
+        //List<int> removePlaneIDs = new List<int>(); 
+        //foreach(UVR_Plane p in Planes.Values)
+        //{
+        //    p.mnTTL--;
+        //    if(p.mnTTL <= 0)
+        //    {
+        //        //삭제 및 종료
+        //        if(p.mnId != 0 && p.mnId == 1)
+        //            removePlaneIDs.Add(p.mnId);
+        //    }
+        //    Planes.Remove(p.mnId);
+        //}
+        //for (int i = 0; i < removePlaneIDs[i]; i++)
+        //    Planes.Remove(i);
     }
 
     public void AddPlane(int id, float x, float y, float z, float d, int _skip = 5) {
@@ -140,20 +153,31 @@ public class PlaneManager : MonoBehaviour
     }
     public void UpdateLocalPlane(int fid, float[] fdata)
     {
-        int N = (int)fdata[0];
-        int idx = 1;
-        for (int j = 0; j < N; j++)
-        {
-            int pid = (int)fdata[idx];
-            float nx = fdata[idx + 1];
-            float ny = fdata[idx + 2];
-            float nz = fdata[idx + 3];
-            float d = fdata[idx + 4];
-            idx += 5;
-            //mText.text = id + " " + nx + " " + ny + " " + nz;
-            //mPlaneManager.AddPlane(id, nx, ny, nz, d);
-            UpdatePlane(pid, nx, ny, nz, d);
+        try {
+            var newVF = mVOFrameManager.GetFrame(fid);
+
+            int N = (int)fdata[0];
+            int idx = 1;
+            for (int j = 0; j < N; j++)
+            {
+                int pid = (int)fdata[idx];
+                float nx = fdata[idx + 1];
+                float ny = fdata[idx + 2];
+                float nz = fdata[idx + 3];
+                float d = fdata[idx + 4];
+                idx += 5;
+                //mText.text = id + " " + nx + " " + ny + " " + nz;
+                //mPlaneManager.AddPlane(id, nx, ny, nz, d);
+                UpdatePlane(pid, nx, ny, nz, d);
+                newVF.AddPlane(Planes[pid]);
+            }
+            mVOFrameManager.AddFrame(newVF);
         }
+        catch(Exception e)
+        {
+            mText.text = e.ToString();
+        }
+        
     }
 
     public void UpdatePlane(int id, float x, float y, float z, float d)
@@ -161,7 +185,7 @@ public class PlaneManager : MonoBehaviour
         y = -y;
         if (!CheckPlane(id))
         {
-            AddPlane(id, x, y, z,d);
+            AddPlane(id, x, y, z, d);
         }
         else
         {
@@ -170,6 +194,9 @@ public class PlaneManager : MonoBehaviour
             p.plane.normal = new Vector3(x, y, z);
             p.plane.distance = d;
         }
+
+        //kf를 찾으면 거기에 p를 추가하면 됨.
+
         ////Pfloor.plane.normal = new Vector3(x, y, z);
         ////Pfloor.plane.distance = d;
 
@@ -202,7 +229,24 @@ public class PlaneManager : MonoBehaviour
         return bRay;
     }
 
-    
+    public Ray CreateRay(Vector2 position, float ws, float hs, Mat invK)
+    {
+        float x = position.x / ws;
+        float y = position.y / hs; //height - position.y / heightScale;
+        Mat pos = new Mat(3, 1, CvType.CV_64FC1);
+        pos.put(0, 0, x);
+        pos.put(1, 0, y);
+        pos.put(2, 0, 1f);
+        Mat temp = invK * pos;
+        var ptCam = new Vector3((float)temp.get(0, 0)[0], (float)temp.get(1, 0)[0], (float)temp.get(2, 0)[0]);
+
+        var toPoint = Camera.main.transform.localToWorldMatrix.MultiplyPoint(ptCam);
+        var dir = toPoint - Camera.main.transform.position;
+        dir = dir.normalized;
+
+        Ray ray = new Ray(Camera.main.transform.position, dir);
+        return ray;
+    }
     ////가장 작은 애 찾기
 
     //추후 업데이트 필요함

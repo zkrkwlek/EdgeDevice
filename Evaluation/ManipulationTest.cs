@@ -119,7 +119,7 @@ public class ManipulationTest : MonoBehaviour
                         voState = VirtualObjectManipulationState.Registration;
                     }
                 }
-                var ray = CreateRay(touch.position);
+                var ray = mPlaneManager.CreateRay(touch.position, widthScale, heightScale, invCamMat);
                 float dist;
                 Plane p;
                 int pid;
@@ -187,23 +187,5 @@ public class ManipulationTest : MonoBehaviour
         }//if count
     }
 
-    Ray CreateRay(Vector2 position)
-    {
-        float x = position.x / widthScale;
-        float y = position.y / heightScale; //height - position.y / heightScale;
-        Mat pos = new Mat(3, 1, CvType.CV_64FC1);
-        pos.put(0, 0, x);
-        pos.put(1, 0, y);
-        pos.put(2, 0, 1f);
-        Mat temp = invCamMat * pos;
-        var ptCam = new Vector3((float)temp.get(0, 0)[0], (float)temp.get(1, 0)[0], (float)temp.get(2, 0)[0]);
-
-        var toPoint = Camera.main.transform.localToWorldMatrix.MultiplyPoint(ptCam);
-        var dir = toPoint - Camera.main.transform.position;
-        dir = dir.normalized;
-
-        Ray ray = new Ray(Camera.main.transform.position, dir);
-        return ray;
-        
-    }
+    
 }
