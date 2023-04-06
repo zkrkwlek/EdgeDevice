@@ -115,7 +115,8 @@ public class DataReceiver : MonoBehaviour
     }
 
     HashSet<int> cids = new HashSet<int>();
-
+    const int nMapPointInfo = 36;
+    const int nSizeServerMP = nMapPointInfo + 32; // 3d x y z + desc // info + desc
     IEnumerator MessageParsing(UdpData data) {
 
         if (data.keyword == "ReferenceFrame")
@@ -211,7 +212,7 @@ public class DataReceiver : MonoBehaviour
             {
                 //float[] fdata = new float[req1.downloadHandler.data.Length / 4];
                 //Buffer.BlockCopy(req1.downloadHandler.data, 0, fdata, 0, req1.downloadHandler.data.Length);
-                int n = req1.downloadHandler.data.Length / 44;
+                int n = req1.downloadHandler.data.Length / nSizeServerMP;
                 try
                 {
                     GCHandle handle = GCHandle.Alloc(req1.downloadHandler.data, GCHandleType.Pinned);

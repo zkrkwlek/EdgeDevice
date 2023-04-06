@@ -15,12 +15,12 @@ public class Tracker : MonoBehaviour
 #if (UNITY_EDITOR_WIN)
 
     [DllImport("UnityLibrary")]
-    private static extern bool Localization(IntPtr texdata, IntPtr posedata, int id, double ts, int nQuality, bool bTracking, bool bVisualization);
+    private static extern bool Localization(IntPtr texdata, IntPtr posedata, int id, double ts, int nQuality, bool bNotBase, bool bTracking, bool bVisualization);
     [DllImport("UnityLibrary")]
     private static extern bool NeedNewKeyFrame(int fid);
 
     [DllImport("UnityLibrary")]
-    private static extern int CreateReferenceFrame(int id, IntPtr data);
+    private static extern int CreateReferenceFrame(int id, bool bNotBase, IntPtr data);
     [DllImport("UnityLibrary")]
     private static extern int CreateReferenceFrame2(int id, IntPtr data);
     [DllImport("UnityLibrary")]
@@ -30,12 +30,12 @@ public class Tracker : MonoBehaviour
     [DllImport("edgeslam")]
     private static extern void SetIMUAddress(IntPtr addr, bool bIMU);
     [DllImport("edgeslam")]
-    private static extern bool Localization(IntPtr texdata, IntPtr posedata, int id, double ts, int nQuality, bool bTracking, bool bVisualization);
+    private static extern bool Localization(IntPtr texdata, IntPtr posedata, int id, double ts, int nQuality, bool bNotBase, bool bTracking, bool bVisualization);
     [DllImport("edgeslam")]
     private static extern bool NeedNewKeyFrame(int fid);
 
     [DllImport("edgeslam")]
-    private static extern int CreateReferenceFrame(int id, IntPtr data);    
+    private static extern int CreateReferenceFrame(int id, bool bNotBase, IntPtr data);    
     [DllImport("edgeslam")]
     private static extern int CreateReferenceFrame2(int id, IntPtr data);    
     [DllImport("edgeslam")]
@@ -50,6 +50,7 @@ public class Tracker : MonoBehaviour
     string dirPath, filename;
     TrackerParam mTrackParam;
     ExperimentParam mExParam;
+    bool bNotBase;
 
     float[] poseData;
     GCHandle poseHandle;
@@ -100,7 +101,7 @@ public class Tracker : MonoBehaviour
 
         mTrackParam = (TrackerParam)mParamManager.DictionaryParam["Tracker"];
         mExParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
-
+        bNotBase = !mExParam.bEdgeBase;
         try {
             if (mTrackParam.bTracking)
             {
@@ -136,7 +137,8 @@ public class Tracker : MonoBehaviour
     {
         if (mExParam.bCreateKFMethod)
         {
-            CreateReferenceFrame(id, ptr);
+            mText.text = "asdkfja;sldfj;alksfj;klasdf";
+            CreateReferenceFrame(id, bNotBase, ptr);
         }
         else
         {
@@ -173,7 +175,7 @@ public class Tracker : MonoBehaviour
             double ts = timeSpan.TotalMilliseconds;
             IntPtr addr = (IntPtr)rgbMat.dataAddr();
             var sTime = DateTime.UtcNow;
-            bool bSuccessTracking = Localization(addr, posePtr, frameID, ts, mManager.AppData.JpegQuality, mTrackParam.bTracking, mTrackParam.bVisualization);
+            bool bSuccessTracking = Localization(addr, posePtr, frameID, ts, mManager.AppData.JpegQuality, bNotBase, mTrackParam.bTracking, mTrackParam.bVisualization);
             var timeSpan2 = DateTime.UtcNow - sTime;
             if (bSuccessTracking)
             {
