@@ -140,7 +140,10 @@ public class PlaneManager : MonoBehaviour
         //for (int i = 0; i < removePlaneIDs[i]; i++)
         //    Planes.Remove(i);
     }
-
+    public UVR_Plane GetPlane(int id)
+    {
+        return Planes[id];
+    }
     public void AddPlane(int id, float x, float y, float z, float d, int _skip = 5) {
         var p = new UVR_Plane(id, x, y, z, d, _skip);
         Planes.Add(id, p);
@@ -214,10 +217,11 @@ public class PlaneManager : MonoBehaviour
         pid = -1;
         foreach (UVR_Plane p in Planes.Values)
         {
-            if (p.mnTTL < 0)
+            if (p.nObservation <= 0)
                 continue;
             float dist = 10000f;
             p.plane.Raycast(ray, out dist);
+            
             if(dist > 0 && dist < min_dist)
             {
                 min_dist = dist;
@@ -238,7 +242,12 @@ public class PlaneManager : MonoBehaviour
         pos.put(1, 0, y);
         pos.put(2, 0, 1f);
         Mat temp = invK * pos;
+
         var ptCam = new Vector3((float)temp.get(0, 0)[0], (float)temp.get(1, 0)[0], (float)temp.get(2, 0)[0]);
+        //float[] farray = new float[3];
+        //temp.get(0, 0, farray);
+        //var ptCam = new Vector3(farray[0], farray[1], farray[2]);
+
 
         var toPoint = Camera.main.transform.localToWorldMatrix.MultiplyPoint(ptCam);
         var dir = toPoint - Camera.main.transform.position;

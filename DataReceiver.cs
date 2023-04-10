@@ -46,6 +46,7 @@ public class DataReceiver : MonoBehaviour
     public SystemManager mSystemManager;
     public ObjectDetection mObjectDetection;
     public Tracker mTracker;
+    public UVRSpatialTest mSpatialTest;
 
     UnityWebRequest GetRequest(string keyword, int id)
     {
@@ -342,6 +343,20 @@ public class DataReceiver : MonoBehaviour
                 mContentManager.UpdateVirtualFrame(data.id,fdata);
             }
         }
+        if (data.keyword == "VO.MARKER.CREATED") //나중에 키워드 변경
+        {
+            UnityWebRequest req1;
+            req1 = GetRequest(data.keyword, data.id);
+            DateTime t1 = DateTime.Now;
+            yield return req1.SendWebRequest();
+
+            if (req1.result == UnityWebRequest.Result.Success)
+            {
+                float[] fdata = new float[req1.downloadHandler.data.Length / 4];
+                Buffer.BlockCopy(req1.downloadHandler.data, 0, fdata, 0, req1.downloadHandler.data.Length);
+                mSpatialTest.AttachObject(data.id, fdata);
+            }
+        }
         if (data.keyword == "MarkerRegistrations") //나중에 키워드 변경
         {
 
@@ -415,6 +430,7 @@ public class DataReceiver : MonoBehaviour
             mContentManager.Move(data.id);
             yield return null;
         }
+        
         if (data.keyword == "dr") //나중에 키워드 변경
         {
             DateTime t1 = DateTime.Now;

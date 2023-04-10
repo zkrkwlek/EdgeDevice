@@ -35,6 +35,7 @@ public class ExperimentSetup : MonoBehaviour
             if (param.bRegistrationTest)
             {
                 sKeywords += ",VO.MARKER.CREATE";
+                rKeywords += ",VO.MARKER.CREATED,single";
             }
             if (param.bManipulationTest)
             {

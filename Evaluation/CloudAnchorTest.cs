@@ -337,6 +337,10 @@ public class CloudAnchorTest : MonoBehaviour
                     Vector2 temp = Vector2.zero;
                     marker.CalculateAziAndEleAndDist(trans.position, out azi, out ele, out dist);
                     float err = marker.Calculate(trans.worldToLocalMatrix, camMatrix, anchorObj.transform.position, marker.corners[0], out temp, false);
+                    if (mExperimentParam.bShowLog)
+                    {
+                        mText.text = temp.ToString() + marker.corners[0].ToString() + " == " + err;
+                    }
                     //if (err < 1000f)
                     writer_spatial.WriteLine(dist + "," + azi + "," + ele + "," + err);
                 }
@@ -429,8 +433,10 @@ public class CloudAnchorTest : MonoBehaviour
             ////터치 인식하고 마커 인식 해야 함.
             if (Input.touchCount == 0)
                 return;
-            if (!bMarkerDetected)
+            if (!bMarkerDetected) {
+                mText.text = "ArUco marker is not detected";
                 return;
+            }
 
             Pose pose = new Pose(marker.gameobject.transform.position, marker.gameobject.transform.rotation);
             localAnchor = anchorManager.AddAnchor(pose);

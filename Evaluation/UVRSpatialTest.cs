@@ -11,6 +11,7 @@ public class UVRSpatialTest : MonoBehaviour
     public SystemManager mSystemManager;
     public DataSender mSender;
     public ParameterManager mParamManager;
+    public PlaneManager mPlaneManager;
     public PoseManager mPoseManager;
     public Text mText;
     ExperimentParam mTestParam;
@@ -38,6 +39,18 @@ public class UVRSpatialTest : MonoBehaviour
     void Update()
     {
         
+    }
+    public void AttachObject(int id, float[] fdata)
+    {
+        Vector3 pos = new Vector3(fdata[0], fdata[1], fdata[2]);
+        Vector3 axis = new Vector3(fdata[3], fdata[4], fdata[5]);
+        float angle = axis.magnitude;
+        axis = axis.normalized;
+        var rot = Quaternion.AngleAxis(angle,axis);
+        var obj = Instantiate(prefabObj, pos,rot);
+        obj.GetComponent<Renderer>().material.color = Color.blue;
+        obj.transform.localScale = new Vector3(scale, scale, scale);
+        mAnchorObjects.Add(id, obj);
     }
 
     void AttachObject(int id, Transform trans)
@@ -82,11 +95,19 @@ public class UVRSpatialTest : MonoBehaviour
             Application.wantsToQuit += WantsToQuit;
 
             ////csv 파일 생성
-            int quality = mTrackerParam.nJpegQuality;
-            int nSkip = mTrackerParam.nSkipFrames;
             string dirPath = Application.persistentDataPath + "/data";
-            string filePath = dirPath + "/err_uvr_"+quality+"_"+nSkip+".csv";
+            string filePath = "";
+            if (mTestParam.bEdgeBase)
+            {
+                filePath = dirPath + "/err_uvr_base.csv";
+            }
+            else {
+                int quality = mTrackerParam.nJpegQuality;
+                int nSkip = mTrackerParam.nSkipFrames;
+                filePath = dirPath + "/err_uvr_" + quality + "_" + nSkip + ".csv";
+            }
             writer_spatial = new StreamWriter(filePath, true);
+
         }
         catch(Exception e)
         {
@@ -112,6 +133,9 @@ public class UVRSpatialTest : MonoBehaviour
         CameraInitEvent.camInitialized -= OnCameraInitialization;
     }
 
+    //리스닝에서 마커 등록
+    //호스팅에서 마커 생성
+
     ArucoMarker marker = null;
     void OnMarkerInteraction(object sender, MarkerDetectEventArgs me)
     {
@@ -123,10 +147,43 @@ public class UVRSpatialTest : MonoBehaviour
             //등록 된 후
             if (!isResolved(id))
             {
-                AttachObject(id, marker.gameobject.transform);
+                if (mTestParam.bHost && Input.touchCount > 0)
+                {
+                    if (mTestParam.bShowLog)
+                        mText.text = "Marker Object Registration";
+                    AttachObject(id, marker.gameobject.transform);
+
+                    var pos = marker.gameobject.transform.position;
+                    var rot = marker.gameobject.transform.rotation;
+                    float angle = 0f;
+                    Vector3 axis = Vector3.zero;
+                    rot.ToAngleAxis(out angle, out axis);
+                    //axis = angle * Mathf.Deg2Rad * axis;
+                    axis = angle * axis;
+                    float[] fdata = new float[6];
+                    fdata[0] = pos.x;
+                    fdata[1] = pos.y;
+                    fdata[2] = pos.z;
+                    fdata[3] = axis.x;
+                    fdata[4] = axis.y;
+                    fdata[5] = axis.z;
+                    byte[] bdata = new byte[fdata.Length * 4];
+                    Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length); //전체 실수형 데이터 수
+                    UdpData mdata = new UdpData("VO.MARKER.CREATE", mSystemManager.User.UserName, id, bdata, 1.0);
+                    StartCoroutine(mSender.SendData(mdata));
+                }
+                if (!mTestParam.bHost)
+                {
+                    float[] fdata = new float[6];
+                    byte[] bdata = new byte[fdata.Length * 4];
+                    Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length); //전체 실수형 데이터 수
+                    UdpData mdata = new UdpData("VO.MARKER.CREATE", mSystemManager.User.UserName, id, bdata, 1.0);
+                    StartCoroutine(mSender.SendData(mdata));
+                }
             }
             else {
                 int fid = me.marker.frameId;
+
                 if (mPoseManager.CheckPose(fid))
                 {
                     var trans = mPoseManager.GetPose(fid);
