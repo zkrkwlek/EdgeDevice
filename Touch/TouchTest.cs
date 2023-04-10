@@ -15,7 +15,6 @@ public class TouchTest : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
     }
 
     IEnumerator ChangeColor(Vector4 c)

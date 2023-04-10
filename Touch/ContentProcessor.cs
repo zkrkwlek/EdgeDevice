@@ -12,6 +12,7 @@ public class ContentProcessor : MonoBehaviour
     public GameObject pathObjPrefab;
     public GameObject tempObjPrefab;
     public ParameterManager mParamManager;
+    public PlaneManager mPlaneManager;
     public VOFrameManager mVOFrameManager;
     ObjectParam mObjParam;
     ExperimentParam mExParam;
@@ -44,10 +45,11 @@ public class ContentProcessor : MonoBehaviour
         try {
             mContentManager.Update();
             mPathManager.Update();
-            int len = 0;
-            var particles = mDrawManager.Update(out len);
-            if(len > 0)
-                m_ParticleSystem.SetParticles(particles, len);
+            mDrawManager.Update();
+            //int len = 0;
+            //var particles = mDrawManager.Update(out len);
+            //if(len > 0)
+            //    m_ParticleSystem.SetParticles(particles, len);
         }
         catch(Exception e)
         {
@@ -87,15 +89,51 @@ public class ContentProcessor : MonoBehaviour
                 Content content = null;
                 if (type == 2)
                 {
-                    content = mDrawManager.Process(id, type, x, y, z, mText);
+                    if (mPlaneManager.CheckPlane(mid))
+                    {
+                        var plane = mPlaneManager.GetPlane(mid);
+                        var normal = plane.plane.normal * -1f;
+                        Color c = Color.blue;
+                        if(mid == 0)
+                        {
+                            c = Color.red;
+                        }else if(mid == 1)
+                        {
+                            c = Color.green;
+                        }
+                        
+                        content = mDrawManager.Process(id, type, x, y, z, ex, ey, ez, normal, c, mText);
+                        //mText.text = mid + " ";
+                        //content = mDrawManager.Process(id, type, x, y, z, ex, ey, ez, mText);
+                    }
+                    else
+                    {
+                        content = mDrawManager.Process(id, type, x, y, z, ex, ey, ez, mText);
+                    }
+                    
                 }
                 else if (type == 1)
                 {
-                    //content = mPathManager.Process(id, type, pathObjPrefab, x, y, z, ex, ey, ez, mObjParam.fWalkingObjScale, mText);
+                    content = mPathManager.Process(id, type, pathObjPrefab, x, y, z, ex, ey, ez, mObjParam.fWalkingObjScale, mText);
                 }
                 else
                 {
-                    //content = mContentManager.Process(id, type, tempObjPrefab, color, x, y, z, mObjParam.fTempObjScale, mText);
+                    if (mExParam.bManipulationTest)
+                    {
+                        if(id % 3 == 0)
+                        {
+                            color = Color.red;
+                        }
+                        if (id % 3 == 1)
+                        {
+                            color = Color.green;
+                        }
+                        if (id % 3 == 2)
+                        {
+                            color = Color.blue;
+                        }
+                    }
+                    content = mContentManager.Process(id, type, tempObjPrefab, color, x, y, z, mObjParam.fTempObjScale, mText);
                 }
                 if (content != null) { 
                     //여기에 제대로 들어가는가?

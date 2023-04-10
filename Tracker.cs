@@ -8,7 +8,33 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 
+public class NeeddKeyFrameEventArgs : EventArgs
+{
+    public NeeddKeyFrameEventArgs(int _id)
+    {
+        mFrameID = _id;
+    }
+    public int mFrameID { get; set; }
+}
 
+class NeedKeyFrameEvent
+{
+    public static event EventHandler<int> needNewKeyFrame;
+    public static void RunEvent(int e)
+    {
+        if (needNewKeyFrame != null)
+        {
+            needNewKeyFrame(null, e);
+        }
+    }
+}
+
+class ExpRobustTracking{
+    int nTotal_our;
+    int nTotal_base;
+    int nSuccess_our;
+    int nSuccess_base;
+}
 
 public class Tracker : MonoBehaviour
 {
@@ -18,7 +44,8 @@ public class Tracker : MonoBehaviour
     private static extern bool Localization(IntPtr texdata, IntPtr posedata, int id, double ts, int nQuality, bool bNotBase, bool bTracking, bool bVisualization);
     [DllImport("UnityLibrary")]
     private static extern bool NeedNewKeyFrame(int fid);
-
+    [DllImport("UnityLibrary")]
+    private static extern void NeedNewKeyFrame2(int fid);
     [DllImport("UnityLibrary")]
     private static extern int CreateReferenceFrame(int id, bool bNotBase, IntPtr data);
     [DllImport("UnityLibrary")]
@@ -33,7 +60,8 @@ public class Tracker : MonoBehaviour
     private static extern bool Localization(IntPtr texdata, IntPtr posedata, int id, double ts, int nQuality, bool bNotBase, bool bTracking, bool bVisualization);
     [DllImport("edgeslam")]
     private static extern bool NeedNewKeyFrame(int fid);
-
+    [DllImport("edgeslam")]
+    private static extern void NeedNewKeyFrame2(int fid);
     [DllImport("edgeslam")]
     private static extern int CreateReferenceFrame(int id, bool bNotBase, IntPtr data);    
     [DllImport("edgeslam")]
@@ -137,7 +165,6 @@ public class Tracker : MonoBehaviour
     {
         if (mExParam.bCreateKFMethod)
         {
-            mText.text = "asdkfja;sldfj;alksfj;klasdf";
             CreateReferenceFrame(id, bNotBase, ptr);
         }
         else
@@ -184,15 +211,13 @@ public class Tracker : MonoBehaviour
                     bool bNeedNewKF = NeedNewKeyFrame(frameID);
                     if (bNeedNewKF)
                     {
-                        byte[] bdata = new byte[20];
-                        //Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length); //전체 실수형 데이터 수
-                        UdpData mdata = new UdpData("ReqUpdateLocalMap", mManager.User.UserName, frameID, bdata, 1.0);
-                        StartCoroutine(mSender.SendData(mdata));
+                        NeedKeyFrameEvent.RunEvent(frameID);
+                        //byte[] bdata = new byte[20];
+                        ////Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length); //전체 실수형 데이터 수
+                        //UdpData mdata = new UdpData("ReqUpdateLocalMap", mManager.User.UserName, frameID, bdata, 1.0);
+                        //StartCoroutine(mSender.SendData(mdata));
                     }
-
                 }
-
-
                 //R.t(), C 생성하고 아무것도 변화안함.
                 Matrix3x3 R = new Matrix3x3(poseData[0], poseData[1], poseData[2],
                             poseData[3], poseData[4], poseData[5],
@@ -209,6 +234,15 @@ public class Tracker : MonoBehaviour
                 if (mPoseManager.mbRunMode)
                     mPoseManager.AddPose(frameID, Camera.main.transform);
             }
+            else
+            {
+                //리로컬 역할도 함
+                if (frameID % mTrackParam.nSkipFrames == 0) {
+                    NeedNewKeyFrame2(frameID);
+                    NeedKeyFrameEvent.RunEvent(frameID);
+                }
+            }
+
             if (mTrackParam.bShowLog) { 
                 mText.text = "localization = " + bSuccessTracking + " == "+ timeSpan2.TotalMilliseconds;
             }

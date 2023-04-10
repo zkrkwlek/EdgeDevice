@@ -18,6 +18,8 @@ public class TestManager : MonoBehaviour
 
     public ParameterManager mParamManager;
     TrackerParam mTrackParam;
+    ExperimentParam mExParam;
+    bool bEdgeBase;
 
     int mnSkipFrame;
 
@@ -40,6 +42,7 @@ public class TestManager : MonoBehaviour
     void OnEnable()
     {
         ImageCatchEvent.frameReceived += OnCameraFrameReceived;
+        NeedKeyFrameEvent.needNewKeyFrame += OnNeedNewKeyFrame;
         //PointCloudUpdateEvent.pointCloudUpdated += OnPointUpdated;
         //MarkerDetectEvent2.markerDetected += OnMarkerInteraction2;
     }
@@ -47,6 +50,7 @@ public class TestManager : MonoBehaviour
     void OnDisable()
     {
         ImageCatchEvent.frameReceived -= OnCameraFrameReceived;
+        NeedKeyFrameEvent.needNewKeyFrame -= OnNeedNewKeyFrame;
         //PointCloudUpdateEvent.pointCloudUpdated -= OnPointUpdated;
         //MarkerDetectEvent2.markerDetected -= OnMarkerInteraction2;
     }
@@ -72,17 +76,36 @@ public class TestManager : MonoBehaviour
         //Camera.main.transform.position;
     }
 
-    ////마커 전송할 때의 아이디 기록
+    bool bNeedNewKF = false;
+    void OnNeedNewKeyFrame(object sender, int id) {
+        bNeedNewKF = true;
+    }
 
+    ////마커 전송할 때의 아이디 기록
+    bool bSendImage = false;
     int prevID = -1;
     //이미지 전송
     void OnCameraFrameReceived(object sender, ImageCatchEventArgs e) {
         try {
             var frameID = e.mnFrameID;
-            if(frameID % mnSkipFrame == 0)
-            {
-                //mText.text = "image id = " + frameID+" "+prevID;
 
+            if (!bEdgeBase)
+            {
+                if(frameID % mnSkipFrame == 0)
+                {
+                    bSendImage = true;
+                }
+            }else if (bEdgeBase)
+            {
+                if (bNeedNewKF)
+                {
+                    bSendImage = true;
+                    //bNeedNewKF = false;
+                }
+            }
+
+            if (bSendImage)
+            {
                 //이미지 압축
                 Imgcodecs.imencode(".jpg", e.rgbMat.clone(), data, param);//jpg
                 byte[] bImgData = data.toArray();//mCamManager.m_Texture.EncodeToJPG(mSystemManager.AppData.JpegQuality);
@@ -93,7 +116,17 @@ public class TestManager : MonoBehaviour
                 UdpData idata = new UdpData("Image", mSystemManager.User.UserName, frameID, bImgData, ts);
                 StartCoroutine(mSender.SendData(idata));
 
+                bSendImage = false;
+                if (bEdgeBase)
+                    bNeedNewKF = false;
             }
+            //if((!bEdgeBase && frameID % mnSkipFrame == 0) || (bEdgeBase && bNeedNewKF))
+            //{
+            //    //mText.text = "image id = " + frameID+" "+prevID;
+
+                
+
+            //}
             if (frameID < prevID)
             {
                 if(prevID > 0)
@@ -219,6 +252,9 @@ public class TestManager : MonoBehaviour
     void Awake()
     {
         mTrackParam = (TrackerParam)mParamManager.DictionaryParam["Tracker"];
+        mExParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
+        bEdgeBase = mExParam.bEdgeBase;
+
         data = new MatOfByte();
         int[] temp = new int[2];
         temp[0] = Imgcodecs.IMWRITE_JPEG_QUALITY; //JPEG_QUALITY
@@ -239,78 +275,5 @@ public class TestManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //////이미지 생성 이벤트를 감지하면, 여기서는 인코딩 후 포즈와 함께 데이터를 전송함.
-        //if (mnFrame % mnSkipFrame == 0) {
-
-        //    try
-        //    {
-        //        if(mCamManager.mnBufferSize > 0)
-        //        {
-        //            byte[] bdata = mCamManager.m_Texture.EncodeToJPG(mSystemManager.AppData.JpegQuality);
-        //            var timeSpan = DateTime.UtcNow - mSystemManager.StartTime;
-        //            double ts = timeSpan.TotalMilliseconds;
-
-        //            ////서버로 전송   
-        //            UdpData idata = new UdpData("Image", mSystemManager.User.UserName, mnFrame, bdata, ts);
-        //            StartCoroutine(mSender.SendData(idata));
-
-        //            //포즈 갱신
-        //            var q = Camera.main.transform.rotation;
-        //            var c = Camera.main.transform.position;
-        //            Matrix4x4 R2 = Matrix4x4.Rotate(q);
-
-
-        //            float angle = 0.0f;
-        //            Vector3 _axis = Vector3.zero;
-        //            Camera.main.transform.rotation.ToAngleAxis(out angle, out _axis);
-        //            float angle2 = angle * Mathf.Deg2Rad;
-        //            _axis = angle2 * _axis;
-        //            Vector3 _c = Camera.main.transform.position;
-        //            Matrix3x3 R = Matrix3x3.EXP(_axis);
-        //            Vector3 t = -(R * _c);
-
-        //            float[] fdata = new float[12];
-        //            R.Copy(ref fdata, 0);
-        //            fdata[9] = t.x;
-        //            fdata[10] = t.y;
-        //            fdata[11] = t.z;
-        //            byte[] bdata2 = new byte[(fdata.Length) * 4];
-        //            Buffer.BlockCopy(fdata, 0, bdata2, 0, bdata2.Length);
-                    
-        //            UdpData pdata = new UdpData("DevicePose", mSystemManager.User.UserName, mnFrame, bdata2, ts);
-        //            StartCoroutine(mSender.SendData(pdata));
-
-
-        //            var q2 = Matrix3x3.RotToQuar(R);
-        //            //mText.text = R2.ToString() + " " + R.ToString() + " "+ q+" "+q2;
-
-
-        //            //12개의 파라메터 전송
-
-                   
-
-
-        //            //mText.text = Camera.main.transform.worldToLocalMatrix.ToString() + "\n" + Rt.ToString() + "\n" + t.x + " " + t.y + " " + t.z;
-        //            //mText.text = "\t\t Point size TestManager = " + " " + PointCloudManager2.Instance.NumMapPoints + " || " + PointCloudManager2.Instance.MapPoints.Count;
-
-        //            //////save data
-        //            //byte[] bytes = mCamManager.m_Texture.EncodeToPNG();
-        //            ////var dirPath = Application.persistentDataPath + "/../../../../Download/ARFoundation/save";
-        //            //var dirPath = Application.persistentDataPath + "/save";
-        //            //if (!Directory.Exists(dirPath))
-        //            //{
-        //            //    Directory.CreateDirectory(dirPath);
-        //            //}
-        //            //File.WriteAllBytes(dirPath + "/c_" + (mnFrame) + ".png", bytes); 
-        //        }
-                
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        mText.text = e.ToString();
-        //    }
-            
-        //}
-        //mnFrame++;
     }
 }

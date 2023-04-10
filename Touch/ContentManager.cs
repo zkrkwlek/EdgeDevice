@@ -5,22 +5,32 @@ using UnityEngine.UI;
 
 public class PointContent : Content
 {
-    public ParticleSystem.Particle particle;
-    public PointContent(int id, int type, Vector3 pos) : base(id, type, pos)
+    public LineRenderer lineRenderer;
+
+    public PointContent(int id, int type, Vector3 spos, Vector3 epos, float r, float g, float b, float a, float size) : base(id, type, spos)
     {
-        this.particle.startColor = Color.black;
-        this.particle.startSize = 0.04f;
-        this.particle.remainingLifetime = 50f;
-        this.particle.position = pos;
-        obj = null;
+        obj = new GameObject();
+        obj.transform.position = spos;
+        lineRenderer = obj.AddComponent<LineRenderer>();
+        lineRenderer.material.color = new Color(r,g,b,a);
+        lineRenderer.startWidth = size;
+        lineRenderer.endWidth = size;
+        lineRenderer.SetPosition(0, spos);
+        lineRenderer.SetPosition(1, epos);
     }
-    public PointContent(int id, int type, Vector3 pos,float r, float g, float b, float a, float size) : base(id, type, pos)
+    public PointContent(int id, int type, Vector3 spos, Vector3 epos, Vector3 normal, float r, float g, float b, float a, float size) : base(id, type, spos)
     {
-        this.particle.startColor = new Color(r, g, b, a);
-        this.particle.startSize = size;
-        this.particle.remainingLifetime = 10f;
-        this.particle.position = pos;
-        obj = null;
+        obj = new GameObject();
+        obj.transform.position = spos;
+        var q = Quaternion.LookRotation(normal);
+        obj.transform.rotation = q;
+        lineRenderer = obj.AddComponent<LineRenderer>();
+        lineRenderer.material.color = new Color(r, g, b, a);
+        lineRenderer.startWidth = size;
+        lineRenderer.endWidth = size;
+        lineRenderer.SetPosition(0, spos);
+        lineRenderer.SetPosition(1, epos);
+        lineRenderer.alignment = LineAlignment.TransformZ;
     }
 }
 
@@ -99,18 +109,42 @@ public class DrawContentManager : ContentManager
     {
 
     }
-    public Content Process(int id, int type, float x, float y, float z, Text mText)
+    public Content Process(int id, int type, float x, float y, float z, float ex, float ey, float ez, Vector3 normal, Color c, Text mText)
     {
         try
         {
-            Vector3 pos = new Vector3(x, y, z);
+            Vector3 spos = new Vector3(x, y, z);
+            Vector3 epos = new Vector3(ex, ey, ez);
             if (CheckContent(id))
             {
                 UpdateContent(id);
             }
             else
             {
-                var newContent = new PointContent(id, type, pos,mDrawParam.r, mDrawParam.g, mDrawParam.b, mDrawParam.a, mDrawParam.size);
+                var newContent = new PointContent(id, type, spos, epos, normal, c.r,c.g,c.b,c.a, mDrawParam.size);
+                RegistContent(id, newContent);
+            }
+            //mText.text = "draw = " + ContentDictionary.Count;
+        }
+        catch (Exception e)
+        {
+            mText.text = e.ToString();
+        }
+        return ContentDictionary[id];
+    }
+    public Content Process(int id, int type, float x, float y, float z, float ex, float ey, float ez, Text mText)
+    {
+        try
+        {
+            Vector3 spos = new Vector3(x, y, z);
+            Vector3 epos = new Vector3(ex, ey, ez);
+            if (CheckContent(id))
+            {
+                UpdateContent(id);
+            }
+            else
+            {
+                var newContent = new PointContent(id, type, spos,epos, mDrawParam.r, mDrawParam.g, mDrawParam.b, mDrawParam.a, mDrawParam.size);
                 RegistContent(id, newContent);
             }
             //mText.text = "draw = " + ContentDictionary.Count;
@@ -121,35 +155,35 @@ public class DrawContentManager : ContentManager
         }
         return ContentDictionary[id];
     }
-    public ParticleSystem.Particle[] Update(out int len)
-    {
-        if (m_Particles == null || m_Particles.Length < ContentDictionary.Count)
-            m_Particles = new ParticleSystem.Particle[ContentDictionary.Count];
-        int idx = 0;
-        foreach (int id in ContentDictionary.Keys)
-        {
-            var content = (PointContent)ContentDictionary[id];
-            if (content.nObservation <= 0)
-            {
-                content.particle.remainingLifetime = -1f;
-            }
-            else
-            {
-                //m_Particles[idx].startColor = Color.cyan;
-                //m_Particles[idx].startSize = 0.05f;
-                //m_Particles[idx].remainingLifetime = 10f;
-                //m_Particles[idx++].position = content.s;
-                m_Particles[idx++] = content.particle;
-            }
-        }
-        for (int i = idx; i < m_Particles.Length; ++i)
-        {
-            m_Particles[i].remainingLifetime = -1f;
-        }
-        len = idx;
-        return m_Particles;
-        //mText.text = "draw test = " + idx + " " + ContentDictionary.Count;
-    }
+    //public ParticleSystem.Particle[] Update(out int len)
+    //{
+    //    if (m_Particles == null || m_Particles.Length < ContentDictionary.Count)
+    //        m_Particles = new ParticleSystem.Particle[ContentDictionary.Count];
+    //    int idx = 0;
+    //    foreach (int id in ContentDictionary.Keys)
+    //    {
+    //        var content = (PointContent)ContentDictionary[id];
+    //        if (content.nObservation <= 0)
+    //        {
+    //            content.particle.remainingLifetime = -1f;
+    //        }
+    //        else
+    //        {
+    //            //m_Particles[idx].startColor = Color.cyan;
+    //            //m_Particles[idx].startSize = 0.05f;
+    //            //m_Particles[idx].remainingLifetime = 10f;
+    //            //m_Particles[idx++].position = content.s;
+    //            m_Particles[idx++] = content.particle;
+    //        }
+    //    }
+    //    for (int i = idx; i < m_Particles.Length; ++i)
+    //    {
+    //        m_Particles[i].remainingLifetime = -1f;
+    //    }
+    //    len = idx;
+    //    return m_Particles;
+    //    //mText.text = "draw test = " + idx + " " + ContentDictionary.Count;
+    //}
 }
 public class PathContentManager : ContentManager
 {
