@@ -71,6 +71,7 @@ public class Tracker : MonoBehaviour
 #endif
     public SystemManager mManager;
     public ParameterManager mParamManager;
+    public EvaluationManager mEvalManager;
     public PoseManager mPoseManager;
     public DataSender mSender;
     public Text mText;
@@ -78,6 +79,7 @@ public class Tracker : MonoBehaviour
     string dirPath, filename;
     TrackerParam mTrackParam;
     ExperimentParam mExParam;
+    EvaluationParam mEvalParam;
     bool bNotBase;
 
     float[] poseData;
@@ -129,10 +131,20 @@ public class Tracker : MonoBehaviour
 
         mTrackParam = (TrackerParam)mParamManager.DictionaryParam["Tracker"];
         mExParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
+        mEvalParam = (EvaluationParam)mParamManager.DictionaryParam["Evaluation"];
         bNotBase = !mExParam.bEdgeBase;
         try {
+
+            if(!mTrackParam.bTracking)
+            {
+                enabled = false;
+                return;
+            }
+
             if (mTrackParam.bTracking)
             {
+                SwitchTrackingMode();
+
                 ////pose ptr
                 poseData = new float[12];
                 poseHandle = GCHandle.Alloc(poseData, GCHandleType.Pinned);
@@ -144,8 +156,7 @@ public class Tracker : MonoBehaviour
                 imuHandle = GCHandle.Alloc(fIMUPose, GCHandleType.Pinned);
                 imuPtr = imuHandle.AddrOfPinnedObject();
                 ////imu ptr
-
-                SwitchTrackingMode();
+                
             }
             Application.wantsToQuit += WantsToQuit;
         }
@@ -165,7 +176,19 @@ public class Tracker : MonoBehaviour
     {
         if (mExParam.bCreateKFMethod)
         {
-            CreateReferenceFrame(id, bNotBase, ptr);
+            int N = CreateReferenceFrame(id, bNotBase, ptr);
+            if (mEvalParam.bServerLocalization)
+            {
+                //성능 평가시
+                bool bRes = true;
+                if (N < 30)
+                {
+                    bRes = false;
+                }
+                string res = id+","+mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + ","+bRes;
+                mEvalManager.writer_server_localization.WriteLine(res);
+            }
+            
         }
         else
         {
@@ -231,18 +254,22 @@ public class Tracker : MonoBehaviour
                 ARM = mode3(data);
                 Camera.main.transform.position = ARUtils.ExtractTranslationFromMatrix(ref ARM);
                 Camera.main.transform.rotation = ARUtils.ExtractRotationFromMatrix(ref ARM);
-                if (mPoseManager.mbRunMode)
-                    mPoseManager.AddPose(frameID, Camera.main.transform);
             }
             else
             {
                 //리로컬 역할도 함
-                if (frameID % mTrackParam.nSkipFrames == 0) {
+                if (mExParam.bEdgeBase && frameID % mTrackParam.nSkipFrames == 0) {
                     NeedNewKeyFrame2(frameID);
                     NeedKeyFrameEvent.RunEvent(frameID);
                 }
             }
-
+            if (mPoseManager.CheckPose(frameID))
+            {
+                //mText.text = "????????????????????????????????";
+            }
+            else {
+                mPoseManager.AddPose(frameID, Camera.main.transform, bSuccessTracking);
+            }
             if (mTrackParam.bShowLog) { 
                 mText.text = "localization = " + bSuccessTracking + " == "+ timeSpan2.TotalMilliseconds;
             }

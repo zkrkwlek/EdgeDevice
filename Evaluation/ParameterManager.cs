@@ -61,6 +61,12 @@ class ExperimentParam : Param
     public bool bObjectDetection;
 }
 
+[Serializable]
+class EvaluationParam : Param
+{
+    public bool bServerLocalization;
+}
+
 public class ParameterManager : MonoBehaviour
 {
     string dirPath;
@@ -69,6 +75,7 @@ public class ParameterManager : MonoBehaviour
     TrackerParam mTrackerParam;
     ArUcoMarkerParam mMarkerParam;
     ExperimentParam mExperimentParam;
+    EvaluationParam mEvalParam;
     ObjectParam mObjParam;
     DrawPaintParam mDrawParam;
     Param mTimeServerParam;
@@ -78,6 +85,7 @@ public class ParameterManager : MonoBehaviour
         File.WriteAllText(dirPath + "/Tracker.json", JsonUtility.ToJson(mTrackerParam));
         File.WriteAllText(dirPath + "/MarkerParam.json", JsonUtility.ToJson(mMarkerParam));
         File.WriteAllText(dirPath + "/ExperimentParam.json", JsonUtility.ToJson(mExperimentParam));
+        File.WriteAllText(dirPath + "/EvaluationParam.json", JsonUtility.ToJson(mEvalParam));
         File.WriteAllText(dirPath + "/ObjectParam.json", JsonUtility.ToJson(mObjParam));
         File.WriteAllText(dirPath + "/DrawPaintParam.json", JsonUtility.ToJson(mDrawParam));
         File.WriteAllText(dirPath + "/TimeServer.json", JsonUtility.ToJson(mTimeServerParam));
@@ -132,6 +140,16 @@ public class ParameterManager : MonoBehaviour
         {
             mExperimentParam = new ExperimentParam();
         }
+        try
+        {
+            string strAddData = File.ReadAllText(dirPath + "/EvaluationParam.json");
+            mEvalParam = JsonUtility.FromJson<EvaluationParam>(strAddData);
+            //mText.text = "success load " + load_scripts;
+        }
+        catch (Exception e)
+        {
+            mEvalParam = new EvaluationParam();
+        }
         //파라메터 로드
 
         //실험 설정 파라메터 로드
@@ -182,6 +200,7 @@ public class ParameterManager : MonoBehaviour
         {
             DictionaryParam.Add("Tracker", mTrackerParam);
             DictionaryParam.Add("Experiment", mExperimentParam);
+            DictionaryParam.Add("Evaluation", mEvalParam);
             DictionaryParam.Add("Marker", mMarkerParam);
             DictionaryParam.Add("VirtualObject", mObjParam);
             DictionaryParam.Add("TimeServer", mTimeServerParam);
