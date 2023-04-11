@@ -20,10 +20,19 @@ public class DataCommunicator : MonoBehaviour
     public Tracker mTracker;
     public UVRSpatialTest mSpatialTest;
 
+    EvaluationParam mEvalParam;
+    TrackerParam mTrackParam;
+    public ParameterManager mParamManager;
+    public EvaluationManager mEvalManager;
+
     public IEnumerator SendData(UdpData data)
     {
+        if(mEvalParam.bNetworkTraffic && data.keyword == "Image")
+        {
+            string res = "image," + data.id + "," + mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + "," + data.data.Length;
+            mEvalManager.writer_network_traffic.WriteLine(res);
+        }
         UnityWebRequest req = SetRequest(data.keyword, data.data, data.id, data.ts);
-
         yield return req.SendWebRequest();
         //if (req.result == UnityWebRequest.Result.Success)
         //{
@@ -86,6 +95,8 @@ public class DataCommunicator : MonoBehaviour
 
     void Awake()
     {
+        mTrackParam = (TrackerParam)mParamManager.DictionaryParam["Tracker"];
+        mEvalParam = (EvaluationParam)mParamManager.DictionaryParam["Evaluation"];
     }
     void OnEnable()
     {
@@ -147,9 +158,14 @@ public class DataCommunicator : MonoBehaviour
                 Buffer.BlockCopy(req1.downloadHandler.data, 0, fdata, 0, req1.downloadHandler.data.Length);
                 int Nmp = (int)fdata[0];
 
+                if (mEvalParam.bNetworkTraffic)
+                {
+                    string res = "keyframe,"+data.id + "," + mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + "," + req1.downloadHandler.data.Length;
+                    mEvalManager.writer_network_traffic.WriteLine(res);
+                }
+
                 try
                 {
-                    
                     GCHandle handle = GCHandle.Alloc(fdata, GCHandleType.Pinned);
                     IntPtr ptr = handle.AddrOfPinnedObject();
                     //int a = CreateReferenceFrame(data.id, ptr);
@@ -217,6 +233,12 @@ public class DataCommunicator : MonoBehaviour
             //1~12까지가 포즈 정보임.
             if (req1.result == UnityWebRequest.Result.Success)
             {
+                if (mEvalParam.bNetworkTraffic)
+                {
+                    string res = "local map," + data.id + "," + mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + "," + req1.downloadHandler.data.Length;
+                    mEvalManager.writer_network_traffic.WriteLine(res);
+                }
+
                 //float[] fdata = new float[req1.downloadHandler.data.Length / 4];
                 //Buffer.BlockCopy(req1.downloadHandler.data, 0, fdata, 0, req1.downloadHandler.data.Length);
                 int n = req1.downloadHandler.data.Length / nSizeServerMP;

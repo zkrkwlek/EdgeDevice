@@ -66,6 +66,7 @@ class EvaluationParam : Param
 {
     public bool bServerLocalization;
     public bool bDeviceLocalization;
+    public bool bNetworkTraffic;
 }
 
 public class ParameterManager : MonoBehaviour

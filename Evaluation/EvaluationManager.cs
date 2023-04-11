@@ -11,6 +11,7 @@ public class EvaluationManager : MonoBehaviour
 
     public StreamWriter writer_server_localization;
     public StreamWriter writer_device_localization;
+    public StreamWriter writer_network_traffic;
 
     bool WantsToQuit()
     {
@@ -18,6 +19,8 @@ public class EvaluationManager : MonoBehaviour
             writer_server_localization.Close();
         if (mEvalParam.bDeviceLocalization)
             writer_device_localization.Close();
+        if (mEvalParam.bNetworkTraffic)
+            writer_network_traffic.Close();
         return true;
     }
 
@@ -42,7 +45,11 @@ public class EvaluationManager : MonoBehaviour
             filePath = dirPath + "/eval_device_localization.csv";
             writer_device_localization = new StreamWriter(filePath, true);
         }
-
+        if (mEvalParam.bNetworkTraffic)
+        {
+            filePath = dirPath + "/eval_network_traffic.csv";
+            writer_network_traffic = new StreamWriter(filePath, true);
+        }
         Application.wantsToQuit += WantsToQuit;
     }
     // Start is called before the first frame update
