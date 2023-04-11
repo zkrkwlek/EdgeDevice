@@ -11,7 +11,7 @@ using UnityEngine.UI;
 public class TestManager : MonoBehaviour
 {
     //public CameraManager mCamManager;
-    public DataSender mSender;
+    public DataCommunicator mSender;
     public SystemManager mSystemManager;
     public Text mText;
     public RawImage rawImage;

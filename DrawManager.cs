@@ -15,7 +15,7 @@ public class DrawManager : MonoBehaviour
 {
     public SystemManager mSystemManager;
     public CameraManager mCamManager;
-    public DataSender mSender;
+    public DataCommunicator mSender;
     public GameObject UVR;
     public Text mText;
 
