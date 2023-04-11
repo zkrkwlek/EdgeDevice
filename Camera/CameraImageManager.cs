@@ -106,14 +106,14 @@ public class CameraImageManager : MonoBehaviour
                 //invCamMatrix = camMatrix.inv();
 
                 Mat distCoeffs = new MatOfDouble(0, 0, 0, 0);
-                float widthScale = (float)Screen.width / width;
-                float heightScale = (float)Screen.height / height;
+                float widthScale = ((float)Screen.width) / width;
+                float heightScale = ((float)Screen.height) / height;
 
                 CameraInitEvent.RunEvent(new CameraInitEventArgs(camMatrix, invCamMatrix, distCoeffs, (int)width, (int)height, widthScale, heightScale));
                 bInit = true;
 
                 if(param.bShowLog)
-                    mText.text = width+" "+height+"= "+fx+" "+fy+" "+cx+" " + cy;
+                    mText.text = image.width+" "+image.height+"||"+width+" "+height+"= "+fx+" "+fy+" "+cx+" " + cy;
             }
 
 
@@ -128,8 +128,9 @@ public class CameraImageManager : MonoBehaviour
 
             //Utils.fastMatToTexture2D(rgbaMat, m_Texture);
             mnBufferSize = length;
-            if(!poseManager.mbRunMode)
+            if (!poseManager.mbRunMode) {
                 poseManager.AddPose(mnFrame, Camera.main.transform);
+            }
             ImageCatchEvent.RunEvent(new ImageCatchEventArgs(ref rgbaMat, mnFrame++));
             //mText.text = cameraIntrinsics.focalLength.ToString() + " " + cameraIntrinsics.principalPoint.ToString() + " " + cameraIntrinsics.resolution.ToString();
         }
