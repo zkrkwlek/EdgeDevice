@@ -73,7 +73,6 @@ public class Tracker : MonoBehaviour
     public ParameterManager mParamManager;
     public EvaluationManager mEvalManager;
     public PoseManager mPoseManager;
-    public DataSender mSender;
     public Text mText;
 
     string dirPath, filename;
@@ -235,10 +234,6 @@ public class Tracker : MonoBehaviour
                     if (bNeedNewKF)
                     {
                         NeedKeyFrameEvent.RunEvent(frameID);
-                        //byte[] bdata = new byte[20];
-                        ////Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length); //전체 실수형 데이터 수
-                        //UdpData mdata = new UdpData("ReqUpdateLocalMap", mManager.User.UserName, frameID, bdata, 1.0);
-                        //StartCoroutine(mSender.SendData(mdata));
                     }
                 }
                 //R.t(), C 생성하고 아무것도 변화안함.
@@ -269,6 +264,11 @@ public class Tracker : MonoBehaviour
             }
             else {
                 mPoseManager.AddPose(frameID, Camera.main.transform, bSuccessTracking);
+                if (mEvalParam.bDeviceLocalization)
+                {
+                    string res = frameID + "," + mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + "," + bSuccessTracking;
+                    mEvalManager.writer_device_localization.WriteLine(res);
+                }
             }
             if (mTrackParam.bShowLog) { 
                 mText.text = "localization = " + bSuccessTracking + " == "+ timeSpan2.TotalMilliseconds;

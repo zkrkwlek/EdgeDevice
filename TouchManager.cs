@@ -15,7 +15,7 @@ public class TouchManager : MonoBehaviour
     public GameObject UVR;
     public SystemManager mSystemManager;
     public CameraManager mCamManager;
-    public DataSender mSender;
+    public DataCommunicator mSender;
     VirtualObjectManipulationState voState;
     //public ParticleSystem mParticleSystem;
     public Text mText;

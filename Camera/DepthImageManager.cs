@@ -9,7 +9,7 @@ using UnityEngine.XR.ARSubsystems;
 
 public class DepthImageManager : MonoBehaviour
 {
-    public DataSender mSender;
+    public DataCommunicator mSender;
     public SystemManager mManager;
     public AROcclusionManager _occlusionManager;
     public Text mText;

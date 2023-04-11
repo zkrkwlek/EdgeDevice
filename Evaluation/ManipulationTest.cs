@@ -8,7 +8,7 @@ using UnityEngine.UI;
 public class ManipulationTest : MonoBehaviour
 {
     public SystemManager mSystemManager;
-    public DataSender mSender;
+    public DataCommunicator mSender;
     public ParameterManager mParamManager;
     public PlaneManager mPlaneManager;
     public Text mText;

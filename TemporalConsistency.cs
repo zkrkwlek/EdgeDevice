@@ -46,7 +46,7 @@ public class TemporalConsistency : MonoBehaviour
     StreamWriter writer_indirect;
 
     public SystemManager mSystemManager;
-    public DataSender mSender;
+    public DataCommunicator mSender;
 
     public Text mText;
 

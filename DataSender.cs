@@ -45,7 +45,7 @@ public class DataSender : MonoBehaviour
         //request.SendWebRequest();
         return request;
     }
-    int mnSendProcessing = 0;
+    
     public IEnumerator SendData(UdpData data)
     {
         UnityWebRequest req = SetRequest(data.keyword, data.data, data.id, data.ts);

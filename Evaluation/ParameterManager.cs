@@ -65,6 +65,7 @@ class ExperimentParam : Param
 class EvaluationParam : Param
 {
     public bool bServerLocalization;
+    public bool bDeviceLocalization;
 }
 
 public class ParameterManager : MonoBehaviour

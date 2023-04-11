@@ -36,7 +36,7 @@ public class Communicator : MonoBehaviour
     private static extern void SetPath(char[] path);
 #endif
 
-    public DataSender sender;
+    public DataCommunicator sender;
     public SystemManager mSystemManager;
     public ParameterManager mParamManager;
     public ExperimentSetup mExperimentSetup;

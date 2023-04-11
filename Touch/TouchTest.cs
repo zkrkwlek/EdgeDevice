@@ -10,7 +10,7 @@ public class TouchTest : MonoBehaviour
     public RawImage rawImage;
 
     public SystemManager mManager;
-    public DataSender mSender;
+    public DataCommunicator mSender;
 
     // Start is called before the first frame update
     void Start()

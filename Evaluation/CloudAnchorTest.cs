@@ -44,7 +44,7 @@ class AnchorListenEvent
 public class CloudAnchorTest : MonoBehaviour
 {
     public SystemManager mSystemManager;
-    public DataSender mSender;
+    public DataCommunicator mSender;
     public ParameterManager mParamManager;
     public ARRaycastManager mRaycastManager;
     public PoseManager mPoseManager;

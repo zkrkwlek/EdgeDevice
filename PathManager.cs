@@ -18,7 +18,7 @@ public class PathManager : MonoBehaviour
     //public bool mbMoving; //움직이는지
     //public bool mbOnPath; //패스 위에 있는지. 태그로 패스 확인.
     public ContentManager mContentManager;
-    public DataSender mSender;
+    public DataCommunicator mSender;
     public GameObject endPathObject; //이게 경로일 때 처음은 이 클래스를 생성한 오브젝트임. 따라서 마지막 오브젝트만 알면 됨.
     public string log;
     float speed;
@@ -52,7 +52,7 @@ public class PathManager : MonoBehaviour
         mbPath = false;
         var UVR = GameObject.Find("UVR");
         mContentManager = UVR.GetComponent<ContentManager>();
-        mSender = UVR.GetComponent<DataSender>();
+        mSender = UVR.GetComponent<DataCommunicator>();
         userName = UVR.GetComponent<SystemManager>().User.UserName;
         mText = GameObject.Find("StatusText").GetComponent<Text>();
 

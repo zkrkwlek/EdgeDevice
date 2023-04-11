@@ -8,35 +8,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
-public class UDPProcessor
-{
-    static private UDPProcessor m_pInstance = null;
-
-    static public UDPProcessor Instance
-    {
-        get
-        {
-            if (m_pInstance == null)
-            {
-                m_pInstance = new UDPProcessor();
-            }
-            return m_pInstance;
-        }
-    }
-
-    void Connect()
-    {
-
-    }
-
-    void Disconnect() { 
-    
-    }
-
-    //여기에 처리 모듈을 등록
-}
-
-public class DataReceiver : MonoBehaviour
+public class DataCommunicator : MonoBehaviour
 {
 
     public Text mText;
@@ -47,6 +19,51 @@ public class DataReceiver : MonoBehaviour
     public ObjectDetection mObjectDetection;
     public Tracker mTracker;
     public UVRSpatialTest mSpatialTest;
+
+    public IEnumerator SendData(UdpData data)
+    {
+        UnityWebRequest req = SetRequest(data.keyword, data.data, data.id, data.ts);
+
+        yield return req.SendWebRequest();
+        //if (req.result == UnityWebRequest.Result.Success)
+        //{
+        //}
+        //yield return null;
+    }
+
+    UnityWebRequest SetRequest(string keyword, byte[] data, int id, double ts)
+    {
+        string addr2 = mSystemManager.AppData.Address + "/Store?keyword=" + keyword + "&id=" + id + "&ts=" + ts + "&src=" + mSystemManager.User.UserName;
+        //string addr2 = strAddr + "/Store?keyword=" + keyword + "&id=" + id + "&ts=" + ts + "&src=" + strUser;
+        //if (ts > 0.0)
+        //addr2 += "&type2=" + ts;
+        UnityWebRequest request = new UnityWebRequest(addr2);
+        request.method = "POST";
+        if (data.Length > 0)
+        {
+            UploadHandlerRaw uH = new UploadHandlerRaw(data);
+            uH.contentType = "application/json";
+            request.uploadHandler = uH;
+        }
+        request.downloadHandler = new DownloadHandlerBuffer();
+        //request.SendWebRequest();
+        return request;
+    }
+
+    UnityWebRequest SetRequest(string url, byte[] data)
+    {
+        UnityWebRequest request = new UnityWebRequest(url);
+        request.method = "POST";
+        if (data.Length > 0)
+        {
+            UploadHandlerRaw uH = new UploadHandlerRaw(data);
+            uH.contentType = "application/json";
+            request.uploadHandler = uH;
+        }
+        request.downloadHandler = new DownloadHandlerBuffer();
+        //request.SendWebRequest();
+        return request;
+    }
 
     UnityWebRequest GetRequest(string keyword, int id)
     {
@@ -69,27 +86,16 @@ public class DataReceiver : MonoBehaviour
 
     void Awake()
     {
-        testDict = new Dictionary<int, MarkerDetectEventArgs2>();
     }
     void OnEnable()
     {
         UdpAsyncHandler.Instance.UdpDataReceived += Process;
-        //추후 삭제
-        MarkerDetectEvent2.markerDetected += OnMarkerInteraction2;
     }
     void OnDisable()
     {
         UdpAsyncHandler.Instance.UdpDataReceived -= Process;
-        //추후 삭제
-        MarkerDetectEvent2.markerDetected -= OnMarkerInteraction2;
     }
 
-    Dictionary<int, MarkerDetectEventArgs2> testDict;
-    //추후 삭제
-    void OnMarkerInteraction2(object sender, MarkerDetectEventArgs2 e)
-    {
-        testDict.Add(e.mnFrameID, e);
-    }
 
         // Start is called before the first frame update
     void Start()
@@ -389,26 +395,7 @@ public class DataReceiver : MonoBehaviour
 
             }
         }
-        if (data.keyword == "MarkerDist") //나중에 키워드 변경
-        {
-            UnityWebRequest req1;
-            req1 = GetRequest(data.keyword, data.id);
-            DateTime t1 = DateTime.Now;
-            yield return req1.SendWebRequest();
-
-            if (req1.result == UnityWebRequest.Result.Success)
-            {
-                float[] fdata = new float[req1.downloadHandler.data.Length / 4];
-                Buffer.BlockCopy(req1.downloadHandler.data, 0, fdata, 0, req1.downloadHandler.data.Length);
-                //프레임아이디, 데이터 내부에 마커아이디, 디스턴스가 기록
-                float mid = fdata[0];
-                float dist = fdata[1];
-
-                //어딘가에서 카메라 데이터 받아오면 여기서 이벤트 생성 가능함.
-                //이벤트를 생성해야 하는데, 여기에서
-                SpatialEvent.RunEvent(new SpatialEventArgs(testDict[data.id].pos, dist)); 
-            }
-        }
+        
         if(data.keyword == "GetCloudAnchor")
         {
             UnityWebRequest req1;
@@ -606,5 +593,4 @@ public class DataReceiver : MonoBehaviour
         yield break;
     }
 
-    
 }

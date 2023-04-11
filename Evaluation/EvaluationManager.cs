@@ -10,11 +10,14 @@ public class EvaluationManager : MonoBehaviour
     EvaluationParam mEvalParam;
 
     public StreamWriter writer_server_localization;
+    public StreamWriter writer_device_localization;
 
     bool WantsToQuit()
     {
         if(mEvalParam.bServerLocalization)
             writer_server_localization.Close();
+        if (mEvalParam.bDeviceLocalization)
+            writer_device_localization.Close();
         return true;
     }
 
@@ -33,6 +36,11 @@ public class EvaluationManager : MonoBehaviour
         {
             filePath = dirPath + "/eval_server_localization.csv";
             writer_server_localization = new StreamWriter(filePath, true);
+        }
+        if (mEvalParam.bDeviceLocalization)
+        {
+            filePath = dirPath + "/eval_device_localization.csv";
+            writer_device_localization = new StreamWriter(filePath, true);
         }
 
         Application.wantsToQuit += WantsToQuit;
