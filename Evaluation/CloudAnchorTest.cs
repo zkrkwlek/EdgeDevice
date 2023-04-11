@@ -288,7 +288,7 @@ public class CloudAnchorTest : MonoBehaviour
         try
         {
             marker = me.marker;
-            if (mExperimentParam.bHost)
+            if (mExperimentParam.bHost && marker.mbCreate)
             {
                 bMarkerDetected = true;
             }
@@ -342,7 +342,7 @@ public class CloudAnchorTest : MonoBehaviour
                         mText.text = temp.ToString() + marker.corners[0].ToString() + " == " + err;
                     }
                     //if (err < 1000f)
-                    writer_spatial.WriteLine(dist + "," + azi + "," + ele + "," + err);
+                    writer_spatial.WriteLine(marker.frameId+","+dist + "," + azi + "," + ele + "," + err);
                 }
                
             }

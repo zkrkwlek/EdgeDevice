@@ -137,6 +137,7 @@ public class UVRSpatialTest : MonoBehaviour
     //호스팅에서 마커 생성
 
     ArucoMarker marker = null;
+    bool bReqMarker = true;
     void OnMarkerInteraction(object sender, MarkerDetectEventArgs me)
     {
         try {
@@ -147,7 +148,8 @@ public class UVRSpatialTest : MonoBehaviour
             //등록 된 후
             if (!isResolved(id))
             {
-                if (mTestParam.bHost && Input.touchCount > 0)
+                //호스트이면서 마커 객체가 생성되었을 때 등록요청을 아직 안했다면
+                if (mTestParam.bHost && marker.mbCreate && bReqMarker)
                 {
                     if (mTestParam.bShowLog)
                         mText.text = "Marker Object Registration";
@@ -171,14 +173,17 @@ public class UVRSpatialTest : MonoBehaviour
                     Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length); //전체 실수형 데이터 수
                     UdpData mdata = new UdpData("VO.MARKER.CREATE", mSystemManager.User.UserName, id, bdata, 1.0);
                     StartCoroutine(mSender.SendData(mdata));
+                    bReqMarker = false;
                 }
-                if (!mTestParam.bHost)
+                //호스트가 아니면서 아직 마커 요청을 안했을 때
+                if (!mTestParam.bHost && bReqMarker)
                 {
                     float[] fdata = new float[6];
                     byte[] bdata = new byte[fdata.Length * 4];
                     Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length); //전체 실수형 데이터 수
                     UdpData mdata = new UdpData("VO.MARKER.CREATE", mSystemManager.User.UserName, id, bdata, 1.0);
                     StartCoroutine(mSender.SendData(mdata));
+                    bReqMarker = false;
                 }
             }
             else {
@@ -186,7 +191,8 @@ public class UVRSpatialTest : MonoBehaviour
 
                 if (mPoseManager.CheckPose(fid))
                 {
-                    var trans = mPoseManager.GetPose(fid);
+                    bool bTrackRes;
+                    var trans = mPoseManager.GetPose(fid, out bTrackRes);
                     var anchorObj = mAnchorObjects[id];
                     float azi = 0f;
                     float ele = 0f;
@@ -195,7 +201,7 @@ public class UVRSpatialTest : MonoBehaviour
                     marker.CalculateAziAndEleAndDist(trans.position, out azi, out ele, out dist);
                     float err = marker.Calculate(trans.worldToLocalMatrix, camMatrix, anchorObj.transform.position, marker.corners[0], out temp, false);
                     //if (err < 1000f)
-                    writer_spatial.WriteLine(dist + "," + azi + "," + ele + "," + err);
+                    writer_spatial.WriteLine(marker.frameId+","+dist + "," + azi + "," + ele + "," + err + ","+ bTrackRes);
                     if (mTestParam.bShowLog)
                     {
                         mText.text = temp.ToString() + marker.corners[0].ToString() + " == " + err;

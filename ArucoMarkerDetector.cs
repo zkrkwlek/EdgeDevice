@@ -178,7 +178,7 @@ public class ArucoMarker{
         float py = (float)(proj.get(1, 0)[0] / depth);
         corner2 = new Vector2(px, py);
         Vector2 proj2D = corner2 - corner;
-        return proj2D.sqrMagnitude;
+        return proj2D.magnitude;
     }
 
 
@@ -664,6 +664,7 @@ public class ArucoMarkerDetector : MonoBehaviour
                                 marker.UpdateObject(new Vector4(0f, 0f, 0f, 1f), markerLength, Camera.main.transform);
                             }
                         }
+                        marker.mbCreate = true;
                         bTouched = false;
                     }
 
