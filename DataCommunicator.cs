@@ -20,6 +20,7 @@ public class DataCommunicator : MonoBehaviour
     public Tracker mTracker;
     public UVRSpatialTest mSpatialTest;
 
+    ExperimentParam mExParam;
     EvaluationParam mEvalParam;
     TrackerParam mTrackParam;
     public ParameterManager mParamManager;
@@ -27,7 +28,7 @@ public class DataCommunicator : MonoBehaviour
 
     public IEnumerator SendData(UdpData data)
     {
-        if(mEvalParam.bNetworkTraffic && data.keyword == "Image")
+        if(mEvalParam.bNetworkTraffic && !mExParam.bEdgeBase && data.keyword == "Image")
         {
             string res = "image," + data.id + "," + mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + "," + data.data.Length;
             mEvalManager.writer_network_traffic.WriteLine(res);
@@ -97,6 +98,7 @@ public class DataCommunicator : MonoBehaviour
     {
         mTrackParam = (TrackerParam)mParamManager.DictionaryParam["Tracker"];
         mEvalParam = (EvaluationParam)mParamManager.DictionaryParam["Evaluation"];
+        mExParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
     }
     void OnEnable()
     {
@@ -158,7 +160,7 @@ public class DataCommunicator : MonoBehaviour
                 Buffer.BlockCopy(req1.downloadHandler.data, 0, fdata, 0, req1.downloadHandler.data.Length);
                 int Nmp = (int)fdata[0];
 
-                if (mEvalParam.bNetworkTraffic)
+                if (mEvalParam.bNetworkTraffic && !mExParam.bEdgeBase)
                 {
                     string res = "keyframe,"+data.id + "," + mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + "," + req1.downloadHandler.data.Length;
                     mEvalManager.writer_network_traffic.WriteLine(res);
@@ -233,9 +235,9 @@ public class DataCommunicator : MonoBehaviour
             //1~12까지가 포즈 정보임.
             if (req1.result == UnityWebRequest.Result.Success)
             {
-                if (mEvalParam.bNetworkTraffic)
+                if (mEvalParam.bNetworkTraffic && mExParam.bEdgeBase)
                 {
-                    string res = "local map," + data.id + "," + mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + "," + req1.downloadHandler.data.Length;
+                    string res = "localmap," + data.id + ",-1,-1," + req1.downloadHandler.data.Length;
                     mEvalManager.writer_network_traffic.WriteLine(res);
                 }
 

@@ -89,6 +89,7 @@ public class Tracker : MonoBehaviour
     GCHandle imuHandle;
     IntPtr imuPtr;
 
+    public bool mbSuccessInit;
     public Camera uvrCam;
 
     bool WantsToQuit()
@@ -132,6 +133,8 @@ public class Tracker : MonoBehaviour
         mExParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
         mEvalParam = (EvaluationParam)mParamManager.DictionaryParam["Evaluation"];
         bNotBase = !mExParam.bEdgeBase;
+        mbSuccessInit = false;
+
         try {
 
             if(!mTrackParam.bTracking)
@@ -173,17 +176,22 @@ public class Tracker : MonoBehaviour
 
     public void CreateKeyFrame(int id, IntPtr ptr)
     {
+        
+
         if (mExParam.bCreateKFMethod)
         {
             int N = CreateReferenceFrame(id, bNotBase, ptr);
+            bool bRes = true;
+            if (N < 30)
+            {
+                bRes = false;
+            }
+            if (!mbSuccessInit && bNotBase && bRes)
+            {
+                mbSuccessInit = true;
+            }
             if (mEvalParam.bServerLocalization && !mExParam.bEdgeBase)
             {
-                //성능 평가시
-                bool bRes = true;
-                if (N < 30)
-                {
-                    bRes = false;
-                }
                 string res = "our,"+id+","+mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + ","+bRes;
                 mEvalManager.writer_server_localization.WriteLine(res);
             }
@@ -197,14 +205,19 @@ public class Tracker : MonoBehaviour
 
     public void UpdateData(int id, int n, IntPtr ptr)
     {
+        bool bRes = true;
+        if (n < 1000)
+        {
+            bRes = false;
+        }
+        if (!mbSuccessInit && mExParam.bEdgeBase && bRes)
+        {
+            mbSuccessInit = true;
+        }
         if (mEvalParam.bServerLocalization)
         {
             //성능 평가시
-            bool bRes = true;
-            if (n < 30)
-            {
-                bRes = false;
-            }
+            
             string res = "base," + id + ",-1,-1," + bRes;
             mEvalManager.writer_server_localization.WriteLine(res);
         }
@@ -275,7 +288,7 @@ public class Tracker : MonoBehaviour
             }
             else {
                 mPoseManager.AddPose(frameID, Camera.main.transform, bSuccessTracking);
-                if (mEvalParam.bDeviceLocalization)
+                if (mEvalParam.bDeviceLocalization && mbSuccessInit)
                 {
                     if (mExParam.bEdgeBase)
                     {
