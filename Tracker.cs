@@ -176,7 +176,7 @@ public class Tracker : MonoBehaviour
         if (mExParam.bCreateKFMethod)
         {
             int N = CreateReferenceFrame(id, bNotBase, ptr);
-            if (mEvalParam.bServerLocalization)
+            if (mEvalParam.bServerLocalization && !mExParam.bEdgeBase)
             {
                 //성능 평가시
                 bool bRes = true;
@@ -184,7 +184,7 @@ public class Tracker : MonoBehaviour
                 {
                     bRes = false;
                 }
-                string res = id+","+mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + ","+bRes;
+                string res = "our,"+id+","+mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + ","+bRes;
                 mEvalManager.writer_server_localization.WriteLine(res);
             }
             
@@ -197,6 +197,17 @@ public class Tracker : MonoBehaviour
 
     public void UpdateData(int id, int n, IntPtr ptr)
     {
+        if (mEvalParam.bServerLocalization)
+        {
+            //성능 평가시
+            bool bRes = true;
+            if (n < 30)
+            {
+                bRes = false;
+            }
+            string res = "base," + id + ",-1,-1," + bRes;
+            mEvalManager.writer_server_localization.WriteLine(res);
+        }
         UpdateLocalMap(id, n, ptr);
     }
 
@@ -266,8 +277,16 @@ public class Tracker : MonoBehaviour
                 mPoseManager.AddPose(frameID, Camera.main.transform, bSuccessTracking);
                 if (mEvalParam.bDeviceLocalization)
                 {
-                    string res = frameID + "," + mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + "," + bSuccessTracking;
-                    mEvalManager.writer_device_localization.WriteLine(res);
+                    if (mExParam.bEdgeBase)
+                    {
+                        string res = "base,"+frameID + ",-1,-1,"+bSuccessTracking;
+                        mEvalManager.writer_device_localization.WriteLine(res);
+                    }
+                    else {
+                        string res = "our,"+frameID + "," + mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + "," + bSuccessTracking;
+                        mEvalManager.writer_device_localization.WriteLine(res);
+                    }
+                    
                 }
             }
             if (mTrackParam.bShowLog) { 

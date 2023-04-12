@@ -43,13 +43,15 @@ class AnchorListenEvent
 
 public class CloudAnchorTest : MonoBehaviour
 {
+    public Text mText;
     public SystemManager mSystemManager;
     public DataCommunicator mSender;
     public ParameterManager mParamManager;
     public ARRaycastManager mRaycastManager;
     public PoseManager mPoseManager;
+    public EvaluationManager mEvalManager;
 
-    public Text mText;
+    EvaluationParam mEvalParam;
     ExperimentParam mExperimentParam;
     TrackerParam mTrackerParam;
     ObjectParam mObjParam;
@@ -76,16 +78,12 @@ public class CloudAnchorTest : MonoBehaviour
     [HideInInspector]
     public Dictionary<int, GameObject> mAnchorObjects;
 
-    string filePath;
-    StreamWriter writer_spatial;
-
     bool WantsToQuit()
     {
         //파라메터 저장
         //File.WriteAllText(filename, JsonUtility.ToJson(param));
         mResolvedAnchors.Clear();
         mAnchorObjects.Clear();
-        writer_spatial.Close();
         return true;
     }
 
@@ -178,15 +176,11 @@ public class CloudAnchorTest : MonoBehaviour
             mode = Mode.HOST;
         }
         mObjParam = (ObjectParam)mParamManager.DictionaryParam["VirtualObject"];
+        mEvalParam = (EvaluationParam)mParamManager.DictionaryParam["Evaluation"];
         scale = mObjParam.fTempObjScale;
         mResolvedAnchors = new Dictionary<int, string>();
         mAnchorObjects = new Dictionary<int, GameObject>();
         Application.wantsToQuit += WantsToQuit;
-
-        ////csv 파일 생성
-        string dirPath = Application.persistentDataPath + "/data";
-        filePath = dirPath + "/error_spatial_google.csv";
-        writer_spatial = new StreamWriter(filePath, true);
 
     }
 
@@ -342,7 +336,11 @@ public class CloudAnchorTest : MonoBehaviour
                         mText.text = temp.ToString() + marker.corners[0].ToString() + " == " + err;
                     }
                     //if (err < 1000f)
-                    writer_spatial.WriteLine(marker.frameId+","+dist + "," + azi + "," + ele + "," + err);
+                    if (mEvalParam.bConsistency)
+                    {
+                        string res = "ARCore," + marker.frameId + ",-1,-1," + dist + "," + azi + "," + ele + "," + err + ",TRUE";
+                        mEvalManager.writer_consistency.WriteLine(res);
+                    }
                 }
                
             }

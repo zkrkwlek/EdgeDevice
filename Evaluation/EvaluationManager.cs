@@ -12,6 +12,8 @@ public class EvaluationManager : MonoBehaviour
     public StreamWriter writer_server_localization;
     public StreamWriter writer_device_localization;
     public StreamWriter writer_network_traffic;
+    public StreamWriter writer_latency;
+    public StreamWriter writer_consistency;
 
     bool WantsToQuit()
     {
@@ -21,6 +23,10 @@ public class EvaluationManager : MonoBehaviour
             writer_device_localization.Close();
         if (mEvalParam.bNetworkTraffic)
             writer_network_traffic.Close();
+        if (mEvalParam.bLatency)
+            writer_latency.Close();
+        if (mEvalParam.bConsistency)
+            writer_consistency.Close();
         return true;
     }
 
@@ -49,6 +55,16 @@ public class EvaluationManager : MonoBehaviour
         {
             filePath = dirPath + "/eval_network_traffic.csv";
             writer_network_traffic = new StreamWriter(filePath, true);
+        }
+        if (mEvalParam.bLatency)
+        {
+            filePath = dirPath + "/eval_latency.csv";
+            writer_latency = new StreamWriter(filePath, true);
+        }
+        if (mEvalParam.bConsistency)
+        {
+            filePath = dirPath + "/eval_consistency.csv";
+            writer_consistency = new StreamWriter(filePath, true);
         }
         Application.wantsToQuit += WantsToQuit;
     }

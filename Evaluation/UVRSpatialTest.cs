@@ -11,12 +11,15 @@ public class UVRSpatialTest : MonoBehaviour
     public SystemManager mSystemManager;
     public DataCommunicator mSender;
     public ParameterManager mParamManager;
-    public PlaneManager mPlaneManager;
+    public EvaluationManager mEvalManager;
     public PoseManager mPoseManager;
     public Text mText;
+
+    EvaluationParam mEvalParam;
     ExperimentParam mTestParam;
     TrackerParam mTrackerParam;
     ObjectParam mObjParam;
+
     public GameObject prefabObj;
     [HideInInspector]
     public Dictionary<int, GameObject> mAnchorObjects;
@@ -26,8 +29,6 @@ public class UVRSpatialTest : MonoBehaviour
     bool mbCamInit = false;
     Mat camMatrix;
     Mat invCamMatrix;
-
-    StreamWriter writer_spatial;
 
     // Start is called before the first frame update
     void Start()
@@ -82,7 +83,8 @@ public class UVRSpatialTest : MonoBehaviour
         {
             mTestParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
             mTrackerParam = (TrackerParam)mParamManager.DictionaryParam["Tracker"];
-            
+            mEvalParam = (EvaluationParam)mParamManager.DictionaryParam["Evaluation"];
+
             if (!mTestParam.bRegistrationTest || !mTrackerParam.bTracking)
             {
                 enabled = false;
@@ -94,20 +96,6 @@ public class UVRSpatialTest : MonoBehaviour
 
             Application.wantsToQuit += WantsToQuit;
 
-            ////csv 파일 생성
-            string dirPath = Application.persistentDataPath + "/data";
-            string filePath = "";
-            if (mTestParam.bEdgeBase)
-            {
-                filePath = dirPath + "/err_uvr_base.csv";
-            }
-            else {
-                int quality = mTrackerParam.nJpegQuality;
-                int nSkip = mTrackerParam.nSkipFrames;
-                filePath = dirPath + "/err_uvr_" + quality + "_" + nSkip + ".csv";
-            }
-            writer_spatial = new StreamWriter(filePath, true);
-
         }
         catch(Exception e)
         {
@@ -118,7 +106,6 @@ public class UVRSpatialTest : MonoBehaviour
 
     bool WantsToQuit()
     {
-        writer_spatial.Close();
         return true;
     }
 
@@ -200,8 +187,21 @@ public class UVRSpatialTest : MonoBehaviour
                     Vector2 temp = Vector2.zero;
                     marker.CalculateAziAndEleAndDist(trans.position, out azi, out ele, out dist);
                     float err = marker.Calculate(trans.worldToLocalMatrix, camMatrix, anchorObj.transform.position, marker.corners[0], out temp, false);
-                    //if (err < 1000f)
-                    writer_spatial.WriteLine(marker.frameId+","+dist + "," + azi + "," + ele + "," + err + ","+ bTrackRes);
+
+                    if (mEvalParam.bConsistency)
+                    {
+                        
+                        if (mTestParam.bEdgeBase)
+                        {
+                            string res = "base,"+marker.frameId+",-1,-1," + dist + "," + azi + "," + ele + "," + err + "," + bTrackRes;
+                            mEvalManager.writer_consistency.WriteLine(res);
+                        }
+                        else {
+                            string res = "our,"+ marker.frameId + "," + mTrackerParam.nJpegQuality + "," + mTrackerParam.nSkipFrames + "," + dist + "," + azi + "," + ele + "," + err + "," + bTrackRes;
+                            mEvalManager.writer_consistency.WriteLine(res);
+                        }
+                    }
+
                     if (mTestParam.bShowLog)
                     {
                         mText.text = temp.ToString() + marker.corners[0].ToString() + " == " + err;
