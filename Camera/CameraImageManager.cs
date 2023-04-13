@@ -108,12 +108,13 @@ public class CameraImageManager : MonoBehaviour
                 Mat distCoeffs = new MatOfDouble(0, 0, 0, 0);
                 float widthScale = ((float)Screen.width) / width;
                 float heightScale = ((float)Screen.height) / height;
+                float cropped = (height - (Screen.height / widthScale)) / 2f;//터치 영역 보정
 
-                CameraInitEvent.RunEvent(new CameraInitEventArgs(camMatrix, invCamMatrix, distCoeffs, (int)width, (int)height, widthScale, heightScale));
+                CameraInitEvent.RunEvent(new CameraInitEventArgs(camMatrix, invCamMatrix, distCoeffs, (int)width, (int)height, widthScale, heightScale, cropped));
                 bInit = true;
 
                 if(param.bShowLog)
-                    mText.text = image.width+" "+image.height+"||"+width+" "+height+"= "+fx+" "+fy+" "+cx+" " + cy;
+                    mText.text = image.width+" "+image.height+"||"+Screen.width+" "+Screen.height+"= "+widthScale+" "+heightScale+" "+cropped;
             }
 
 
