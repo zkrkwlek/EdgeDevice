@@ -197,8 +197,9 @@ public class PathContentManager : ContentManager
         c.obj.SetActive(true);
     }
     public Content Process(int cid, int type, GameObject prefab, float sx, float sy, float sz, float ex, float ey, float ez, float s, Text mText) {
-        Vector3 sPos = new Vector3(sx, -sy, sz);
-        Vector3 ePos = new Vector3(ex, -ey, ez);
+        mText.text = "path path";
+        Vector3 sPos = new Vector3(sx, sy, sz);
+        Vector3 ePos = new Vector3(ex, ey, ez);
         if (CheckContent(cid))
         {
             //°»½Å

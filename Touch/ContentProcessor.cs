@@ -73,6 +73,7 @@ public class ContentProcessor : MonoBehaviour
 
             int N = (int)fdata[0];
             int idx = 1;
+            
             for (int j = 0; j < N; j++)
             {
                 int id = (int)fdata[idx];
