@@ -24,7 +24,7 @@ public class ManipulationTest : MonoBehaviour
     int height;
     float widthScale;
     float heightScale;
-
+    float heightCropped;
     string[] logString;
 
     void Awake()
@@ -53,6 +53,7 @@ public class ManipulationTest : MonoBehaviour
             height = e.height;
             widthScale = e.widthScale;
             heightScale = e.heightScale;
+            heightCropped = e.fHeightCropped;
         }
         catch (Exception ex)
         {
@@ -119,7 +120,7 @@ public class ManipulationTest : MonoBehaviour
                         voState = VirtualObjectManipulationState.Registration;
                     }
                 }
-                var ray = mPlaneManager.CreateRay(touch.position, widthScale, heightScale, invCamMat);
+                var ray = mPlaneManager.CreateRay(touch.position, widthScale, heightCropped, invCamMat);//heightScale
                 float dist;
                 Plane p;
                 int pid;

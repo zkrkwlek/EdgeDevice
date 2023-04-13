@@ -23,6 +23,7 @@ public class DrawTest : MonoBehaviour
     int height;
     float widthScale;
     float heightScale;
+    float heightCropped;
 
     void Awake()
     {
@@ -61,6 +62,7 @@ public class DrawTest : MonoBehaviour
             height = e.height;
             widthScale = e.widthScale;
             heightScale = e.heightScale;
+            heightCropped = e.fHeightCropped;
         }
         catch (Exception ex)
         {
@@ -112,7 +114,7 @@ public class DrawTest : MonoBehaviour
             Touch touch = Input.GetTouch(0);
             var phase = touch.phase;
 
-            var ray = mPlaneManager.CreateRay(touch.position, widthScale, heightScale, invCamMat);
+            var ray = mPlaneManager.CreateRay(touch.position, widthScale, heightCropped, invCamMat);
             float dist;
             Plane p;
             int pid;

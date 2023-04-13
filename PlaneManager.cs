@@ -233,10 +233,36 @@ public class PlaneManager : MonoBehaviour
         return bRay;
     }
 
-    public Ray CreateRay(Vector2 position, float ws, float hs, Mat invK)
+    //이미지로부터 생성할 때(ex) 코너점)
+    public Ray CreateRay(Vector2 position, Mat invK)
+    {
+        float x = position.x;
+        float y = position.y; //height - position.y / heightScale;
+        Mat pos = new Mat(3, 1, CvType.CV_64FC1);
+        pos.put(0, 0, x);
+        pos.put(1, 0, y);
+        pos.put(2, 0, 1f);
+        Mat temp = invK * pos;
+
+        var ptCam = new Vector3((float)temp.get(0, 0)[0], (float)temp.get(1, 0)[0], (float)temp.get(2, 0)[0]);
+        //float[] farray = new float[3];
+        //temp.get(0, 0, farray);
+        //var ptCam = new Vector3(farray[0], farray[1], farray[2]);
+
+
+        var toPoint = Camera.main.transform.localToWorldMatrix.MultiplyPoint(ptCam);
+        var dir = toPoint - Camera.main.transform.position;
+        dir = dir.normalized;
+
+        Ray ray = new Ray(Camera.main.transform.position, dir);
+        return ray;
+    }
+    //안드로이드 스크린 터치로부터 생성할 때
+
+    public Ray CreateRay(Vector2 position, float ws, float cropped, Mat invK)
     {
         float x = position.x / ws;
-        float y = position.y / hs; //height - position.y / heightScale;
+        float y = (position.y / ws) + cropped; //height - position.y / heightScale;
         Mat pos = new Mat(3, 1, CvType.CV_64FC1);
         pos.put(0, 0, x);
         pos.put(1, 0, y);

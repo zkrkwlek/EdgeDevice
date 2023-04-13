@@ -641,7 +641,7 @@ public class ArucoMarkerDetector : MonoBehaviour
                         if (mTrackerParam.bTracking)
                         {
                             //내 알고리즘으로 마커 생성
-                            var ray = mPlaneManager.CreateRay(marker.corners[0], 1.0f, 1.0f, invCamMatrix);
+                            var ray = mPlaneManager.CreateRay(marker.corners[0], invCamMatrix);
                             float dist;
                             Plane p;
                             int pid;
@@ -783,7 +783,7 @@ public class ArucoMarkerDetector : MonoBehaviour
         param = (ArUcoMarkerParam)mParamManager.DictionaryParam["Marker"];
         mTrackerParam = (TrackerParam)mParamManager.DictionaryParam["Tracker"];
         mExParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
-        if (!mExParam.bRegistrationTest) { 
+        if (!mExParam.bRegistrationTest && !mExParam.bPathTest) { 
             enabled = false;
             return;
         }
