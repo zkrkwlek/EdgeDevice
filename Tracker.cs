@@ -249,9 +249,14 @@ public class Tracker : MonoBehaviour
             IntPtr addr = (IntPtr)rgbMat.dataAddr();
             var sTime = DateTime.UtcNow;
             bool bSuccessTracking = Localization(addr, posePtr, frameID, ts, mManager.AppData.JpegQuality, bNotBase, mTrackParam.bTracking, mTrackParam.bVisualization);
-            var timeSpan2 = DateTime.UtcNow - sTime;
             if (bSuccessTracking)
             {
+                if (mEvalManager.bProcess)
+                {
+                    var timeSpan2 = DateTime.UtcNow - sTime;
+                    string res = "localization," + timeSpan2.TotalMilliseconds;
+                    mEvalManager.writer_process.WriteLine(res);
+                }
                 if (mExParam.bEdgeBase)
                 {
                     bool bNeedNewKF = NeedNewKeyFrame(frameID);
@@ -302,9 +307,9 @@ public class Tracker : MonoBehaviour
                     
                 }
             }
-            if (mTrackParam.bShowLog) { 
-                mText.text = "localization = " + bSuccessTracking + " == "+ timeSpan2.TotalMilliseconds;
-            }
+            //if (mTrackParam.bShowLog) { 
+            //    mText.text = "localization = " + bSuccessTracking + " == "+ timeSpan2.TotalMilliseconds;
+            //}
         }
         catch (Exception ex)
         {

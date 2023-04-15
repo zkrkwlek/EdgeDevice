@@ -10,10 +10,17 @@ public class EvaluationManager : MonoBehaviour
     EvaluationParam mEvalParam;
 
     public StreamWriter writer_server_localization;
+    public bool bServerLocalization;
     public StreamWriter writer_device_localization;
+    public bool bDeviceLocalization;
     public StreamWriter writer_network_traffic;
+    public bool bTraffic;
     public StreamWriter writer_latency;
+    public bool bLatency;
     public StreamWriter writer_consistency;
+    public bool bConsistency;
+    public StreamWriter writer_process;
+    public bool bProcess;
 
     bool WantsToQuit()
     {
@@ -27,6 +34,8 @@ public class EvaluationManager : MonoBehaviour
             writer_latency.Close();
         if (mEvalParam.bConsistency)
             writer_consistency.Close();
+        if (mEvalParam.bProcess)
+            writer_process.Close();
         return true;
     }
 
@@ -34,6 +43,13 @@ public class EvaluationManager : MonoBehaviour
     {
         mTrackerParam = (TrackerParam)mParamManager.DictionaryParam["Tracker"];
         mEvalParam = (EvaluationParam)mParamManager.DictionaryParam["Evaluation"];
+
+        this.bServerLocalization = mEvalParam.bServerLocalization;
+        this.bDeviceLocalization = mEvalParam.bDeviceLocalization;
+        this.bTraffic = mEvalParam.bNetworkTraffic;
+        this.bLatency = mEvalParam.bLatency;
+        this.bConsistency = mEvalParam.bConsistency;
+        this.bProcess = mEvalParam.bProcess;
 
         string dirPath = Application.persistentDataPath + "/data/Evaluation";
         if (!Directory.Exists(dirPath))
@@ -60,6 +76,11 @@ public class EvaluationManager : MonoBehaviour
         {
             filePath = dirPath + "/eval_latency.csv";
             writer_latency = new StreamWriter(filePath, true);
+        }
+        if (mEvalParam.bProcess)
+        {
+            filePath = dirPath + "/eval_process.csv";
+            writer_process = new StreamWriter(filePath, true);
         }
         if (mEvalParam.bConsistency)
         {

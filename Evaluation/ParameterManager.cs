@@ -68,7 +68,8 @@ class EvaluationParam : Param
     public bool bServerLocalization;
     public bool bDeviceLocalization;
     public bool bNetworkTraffic;
-    public bool bLatency;
+    public bool bLatency; //네트워크 레이턴시
+    public bool bProcess; //기기 프로세싱 타임
     public bool bConsistency;
 }
 

@@ -28,17 +28,28 @@ public class DataCommunicator : MonoBehaviour
 
     public IEnumerator SendData(UdpData data)
     {
-        if(mEvalParam.bNetworkTraffic && !mExParam.bEdgeBase && data.keyword == "Image")
+        data.sendedTime = DateTime.UtcNow;
+        if (mEvalParam.bNetworkTraffic && !mExParam.bEdgeBase && data.keyword == "Image")
         {
             string res = "image," + data.id + "," + mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + "," + data.data.Length;
             mEvalManager.writer_network_traffic.WriteLine(res);
         }
         UnityWebRequest req = SetRequest(data.keyword, data.data, data.id, data.ts);
         yield return req.SendWebRequest();
-        //if (req.result == UnityWebRequest.Result.Success)
-        //{
-        //}
-        //yield return null;
+        if (mEvalParam.bLatency && data.keyword == "Image")
+        {
+            if (req.result == UnityWebRequest.Result.Success)
+            {
+                var time = DateTime.UtcNow;
+                var timeSpan = time - data.sendedTime;
+                double ts = timeSpan.TotalMilliseconds;
+                var timeSpan2 = time - mSystemManager.StartTime;
+                string res = "image,upload,"+data.id + "," + mTrackParam.nJpegQuality + "," + ts+","+timeSpan2.TotalMilliseconds;
+                mEvalManager.writer_latency.WriteLine(res);
+            }
+            yield return null;
+        }
+
     }
 
     UnityWebRequest SetRequest(string keyword, byte[] data, int id, double ts)
@@ -120,7 +131,6 @@ public class DataCommunicator : MonoBehaviour
             int size = e.bdata.Length;
             string msg = System.Text.Encoding.Default.GetString(e.bdata);
             UdpData data = JsonUtility.FromJson<UdpData>(msg);
-            data.receivedTime = DateTime.Now;
             StartCoroutine(MessageParsing(data));
         }
         catch(Exception ex)
@@ -138,19 +148,29 @@ public class DataCommunicator : MonoBehaviour
     const int nMapPointInfo = 36;
     const int nSizeServerMP = nMapPointInfo + 32; // 3d x y z + desc // info + desc
     IEnumerator MessageParsing(UdpData data) {
-
+        data.receivedTime = DateTime.UtcNow;
         if (data.keyword == "ReferenceFrame")
         {
             UnityWebRequest req1;
             req1 = GetRequest(data.keyword, data.id);
-            DateTime t1 = DateTime.Now;
+            DateTime t1 = DateTime.UtcNow;
             yield return req1.SendWebRequest();
             //1~12까지가 포즈 정보임.
             if (req1.result == UnityWebRequest.Result.Success)
             {
+                if (mEvalParam.bLatency && !mExParam.bEdgeBase)
+                {
+                    var time = DateTime.UtcNow;
+                    var timeSpan = time - data.receivedTime;
+                    double ts = timeSpan.TotalMilliseconds;
+                    var timeSpan2 = time - mSystemManager.StartTime;
+                    string res = "reference frame,download," + data.id + "," + mTrackParam.nJpegQuality + "," + ts + "," + timeSpan2.TotalMilliseconds;
+                    mEvalManager.writer_latency.WriteLine(res);
+                }
+
                 ////
                 if (!mSystemManager.mbInit) {
-                    var timeSpan = DateTime.Now - mSystemManager.TestTime;
+                    var timeSpan = DateTime.UtcNow - mSystemManager.TestTime;
                     double ts = timeSpan.TotalMilliseconds;
                     mSystemManager.writer.WriteLine(ts);
                     mSystemManager.mbInit = true;
@@ -188,11 +208,20 @@ public class DataCommunicator : MonoBehaviour
         {
             UnityWebRequest req1;
             req1 = GetRequest(data.keyword, data.id);
-            DateTime t1 = DateTime.Now;
+            DateTime t1 = DateTime.UtcNow;
             yield return req1.SendWebRequest();
             //1~12까지가 포즈 정보임.
             if (req1.result == UnityWebRequest.Result.Success)
             {
+                if (mEvalParam.bLatency && mExParam.bEdgeBase)
+                {
+                    var time = DateTime.UtcNow;
+                    var timeSpan = time - data.receivedTime;
+                    double ts = timeSpan.TotalMilliseconds;
+                    var timeSpan2 = time - mSystemManager.StartTime;
+                    string res = "base local map,download," + data.id + ",-1," + ts + "," + timeSpan2.TotalMilliseconds;
+                    mEvalManager.writer_latency.WriteLine(res);
+                }
                 if (mEvalParam.bNetworkTraffic && mExParam.bEdgeBase)
                 {
                     string res = "localmap," + data.id + ",-1,-1," + req1.downloadHandler.data.Length;

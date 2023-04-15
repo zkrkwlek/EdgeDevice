@@ -12,6 +12,7 @@ public class ContentProcessor : MonoBehaviour
     public GameObject pathObjPrefab;
     public GameObject tempObjPrefab;
     public ParameterManager mParamManager;
+    public EvaluationManager mEvalManager;
     public PlaneManager mPlaneManager;
     public VOFrameManager mVOFrameManager;
     ObjectParam mObjParam;
@@ -28,7 +29,7 @@ public class ContentProcessor : MonoBehaviour
         mExParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
         mDrawParam = (DrawPaintParam)mParamManager.DictionaryParam["DrawPaint"];
 
-        mContentManager = new ContentManager(tempObjPrefab,pathObjPrefab);
+        mContentManager = new ContentManager(mEvalManager,tempObjPrefab,pathObjPrefab);
         //mPathManager = new PathContentManager();
         //mDrawManager = new DrawContentManager();
         //mDrawManager.mDrawParam = mDrawParam;

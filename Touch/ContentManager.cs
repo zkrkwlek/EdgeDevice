@@ -113,100 +113,21 @@ public class ContentData
 
 }
 
-public class DrawContentManager : ContentManager
-{
-    //파티클 시스템 추가하기
-    public DrawPaintParam mDrawParam; //원래 여기는 받는 그림 속성임. 보낼 때는 드로우 테스트에서임.
-    public DrawContentManager():base()
-    {
-
-    }
-    void UpdateContent(int id)
-    {
-
-    }
-
-    public Content Process(int id, int type, float x, float y, float z, float ex, float ey, float ez, Vector3 normal, Color c, Text mText)
-    {
-        try
-        {
-            Vector3 spos = new Vector3(x, y, z);
-            Vector3 epos = new Vector3(ex, ey, ez);
-            if (CheckContent(id))
-            {
-                UpdateContent(id);
-            }
-            else
-            {
-                var newContent = new PointContent(id, type, spos, epos, normal, c.r,c.g,c.b,c.a, mDrawParam.size);
-                RegistContent(id, newContent);
-            }
-            //mText.text = "draw = " + ContentDictionary.Count;
-        }
-        catch (Exception e)
-        {
-            mText.text = e.ToString();
-        }
-        return ContentDictionary[id];
-    }
-    public Content Process(int id, int type, float x, float y, float z, float ex, float ey, float ez, Text mText)
-    {
-        try
-        {
-            Vector3 spos = new Vector3(x, y, z);
-            Vector3 epos = new Vector3(ex, ey, ez);
-            if (CheckContent(id))
-            {
-                UpdateContent(id);
-            }
-            else
-            {
-                var newContent = new PointContent(id, type, spos,epos, mDrawParam.r, mDrawParam.g, mDrawParam.b, mDrawParam.a, mDrawParam.size);
-                RegistContent(id, newContent);
-            }
-            //mText.text = "draw = " + ContentDictionary.Count;
-        }
-        catch(Exception e)
-        {
-            mText.text = e.ToString();
-        }
-        return ContentDictionary[id];
-    }
-}
-public class PathContentManager : ContentManager
-{
-    public PathContentManager() : base()
-    {
-
-    }
-    void UpdateContent(int id)
-    {
-        var c = ContentDictionary[id];
-        c.obj.SetActive(true);
-    }
-    
-    public void Move(int id)
-    {
-        if (ContentDictionary.ContainsKey(id))
-        {
-            var content = ContentDictionary[id];
-            content.obj.GetComponent<ObjectPath>().MoveStart();
-        }
-    }
-}
 public class ContentManager
 {
 
     public Dictionary<int, Content> ContentDictionary;
     public GameObject pathObjPrefab;
     public GameObject tempObjPrefab;
+    EvaluationManager mEvalManager;
 
     public ContentManager()
     {
         ContentDictionary = new Dictionary<int, Content>();
     }
-    public ContentManager(GameObject _obj, GameObject _path):this()
+    public ContentManager(EvaluationManager _evalManager,GameObject _obj, GameObject _path):this()
     {
+        mEvalManager = _evalManager;
         tempObjPrefab = _obj;
         pathObjPrefab = _path;
     }
@@ -236,13 +157,27 @@ public class ContentManager
         try {
             if (CheckContent(cid))
             {
+                var stime = DateTime.UtcNow;
                 UpdateContent(cid, pos);
+                if (mEvalManager.bProcess)
+                {
+                    var timeSpan = DateTime.UtcNow - stime;
+                    string res = "update," + timeSpan.TotalMilliseconds;
+                    mEvalManager.writer_process.WriteLine(res);
+                }
             }
             else
             {
                 //create
+                var stime = DateTime.UtcNow;
                 var newContent = new Content(cid, type, prefab, pos, s, c, mText);
                 RegistContent(cid, newContent);
+                if (mEvalManager.bProcess)
+                {
+                    var timeSpan = DateTime.UtcNow - stime;
+                    string res = "create," + timeSpan.TotalMilliseconds;
+                    mEvalManager.writer_process.WriteLine(res);
+                }
             }
             return ContentDictionary[cid];
         }
