@@ -12,9 +12,11 @@ public class ManipulationTest : MonoBehaviour
     public ParameterManager mParamManager;
     public PlaneManager mPlaneManager;
     public Text mText;
+    public GameObject prefabObj;
+
     ExperimentParam mTestParam;
     TrackerParam mTrackerParam;
-    public GameObject prefabObj;
+    ObjectParam mObjParam;
 
     public RawImage rawImage;
     VirtualObjectManipulationState voState;
@@ -31,12 +33,14 @@ public class ManipulationTest : MonoBehaviour
     {
         mTestParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
         mTrackerParam = (TrackerParam)mParamManager.DictionaryParam["Tracker"];
+        mObjParam = (ObjectParam)mParamManager.DictionaryParam["VirtualObject"];
 
         if (!mTestParam.bManipulationTest || !mTrackerParam.bTracking)
         {
             enabled = false;
             return;
         }
+        
         voState = VirtualObjectManipulationState.None;
         p = new Plane(Vector3.zero, 0f);
         logString = new string[2];
@@ -127,11 +131,17 @@ public class ManipulationTest : MonoBehaviour
                 //bool bRay = p.Raycast(ray, out dist);
                 bool bRay = mPlaneManager.FindNearestPlane(ray, out pid, out p, out dist);
 
-                if (mTestParam.bShowLog)
-                    mText.text = pid +" = "+p.ToString()+" = "+dist;
-
+                //if (mTestParam.bShowLog)
+                //    mText.text = pid +" = "+p.ToString()+" = "+dist;
+                
                 if (bRay)
                 {
+                    float angle;
+                    Vector3 axis;
+                    var rot = Quaternion.LookRotation(p.normal);
+                    rot.ToAngleAxis(out angle, out axis);
+                    axis = angle * axis;
+
                     float[] fdata = new float[5];
                     Vector3 newPos = ray.origin + ray.direction * dist;
                     //fdata[0] = x;
@@ -148,16 +158,16 @@ public class ManipulationTest : MonoBehaviour
                         bSend = true;
                         keyword = "VO.MANIPULATE";
                         sendID = touchObject.GetComponentInParent<ARObject>().contentID;
-                        if (mTestParam.bShowLog)
-                            mText.text = logString[1];
+                        //if (mTestParam.bShowLog)
+                        //    mText.text = logString[1];
                     }
                     if (voState == VirtualObjectManipulationState.Registration && phase == TouchPhase.Ended)
                     {
                         bSend = true;
                         keyword = "VO.CREATE";
                         sendID = touchID;
-                        if (mTestParam.bShowLog)
-                            mText.text = logString[0];
+                        //if (mTestParam.bShowLog)
+                        //    mText.text = logString[0];
                     }
                     if (bSend)
                     {
@@ -165,7 +175,10 @@ public class ManipulationTest : MonoBehaviour
                             StartCoroutine(ChangeColor(new Vector4(1f, 0f, 0f, 0.3f)));
                         byte[] bdata = new byte[fdata.Length * 4];
                         Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length); //전체 실수형 데이터 수
-                        UdpData mdata = new UdpData(keyword, mSystemManager.User.UserName, sendID, bdata, 1.0);
+
+                        //자기 자신 포함 : length+id+type +3xvector3+scale
+                        byte[] bdata2 = ContentData.Generate(13f, sendID, (float)ContentType.Object,newPos.x, newPos.y, newPos.z, axis.x, axis.y, axis.z, mObjParam.objColor.r, mObjParam.objColor.g, mObjParam.objColor.b, mObjParam.fTempObjScale);
+                        UdpData mdata = new UdpData(keyword, mSystemManager.User.UserName, sendID, bdata2, 1.0);
                         StartCoroutine(mSender.SendData(mdata));
 
                     }

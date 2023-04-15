@@ -14,6 +14,7 @@ public class DrawTest : MonoBehaviour
     public Text mText;
     ExperimentParam mTestParam;
     TrackerParam mTrackerParam;
+    DrawPaintParam mPaintParam;
 
     //프로젝션ㅇ 용
     Plane p;
@@ -35,6 +36,8 @@ public class DrawTest : MonoBehaviour
             enabled = false;
             return;
         }
+        mPaintParam = (DrawPaintParam)mParamManager.DictionaryParam["DrawPaint"];
+
         //voState = VirtualObjectManipulationState.None;
         //p = new Plane(Vector3.zero, 0f);
         //logString = new string[2];
@@ -151,10 +154,15 @@ public class DrawTest : MonoBehaviour
                     tempData[4] = prevPoint.y;
                     tempData[5] = prevPoint.z;
                     tempData[6] = (float)pid;
-
                     byte[] bdata = new byte[tempData.Length * 4];
                     Buffer.BlockCopy(tempData, 0, bdata, 0, bdata.Length); //전체 실수형 데이터 수
-                    UdpData mdata = new UdpData("VO.DRAW", mSystemManager.User.UserName, touchID, bdata, 1.0);
+
+                    ////length, id, type, pos1, pos2, color, scale = 13
+                    byte[] bdata2 = ContentData.Generate(14f, touchID, (float)ContentType.Draw, pid,
+                        point.x, point.y, point.z,
+                        prevPoint.x, prevPoint.y, prevPoint.z, 
+                        mPaintParam.r, mPaintParam.g, mPaintParam.b, mPaintParam.size);
+                    UdpData mdata = new UdpData("VO.DRAW", mSystemManager.User.UserName, touchID, bdata2, 1.0);
                     StartCoroutine(mSender.SendData(mdata));
                 }
                 prevPoint = point;

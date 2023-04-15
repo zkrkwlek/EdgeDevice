@@ -16,6 +16,7 @@ public class ObjectParam : Param
 {
     public float fWalkingObjScale;
     public float fTempObjScale;
+    public Color objColor;
 }
 [Serializable]
 public class DrawPaintParam : Param

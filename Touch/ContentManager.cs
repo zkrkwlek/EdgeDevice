@@ -96,10 +96,26 @@ public class Content
 
 }
 
+public enum ContentType
+{
+    Object=0,Path,Draw
+}
+
+//float으로 객체 생성하고 보낼 수 있또록
+public class ContentData
+{
+    static public byte[] Generate(params float[] fdata)
+    {
+        byte[] bdata = new byte[fdata.Length * 4];
+        Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length);
+        return bdata;
+    }
+
+}
+
 public class DrawContentManager : ContentManager
 {
     //파티클 시스템 추가하기
-    ParticleSystem.Particle[] m_Particles;
     public DrawPaintParam mDrawParam; //원래 여기는 받는 그림 속성임. 보낼 때는 드로우 테스트에서임.
     public DrawContentManager():base()
     {
@@ -109,6 +125,7 @@ public class DrawContentManager : ContentManager
     {
 
     }
+
     public Content Process(int id, int type, float x, float y, float z, float ex, float ey, float ez, Vector3 normal, Color c, Text mText)
     {
         try
@@ -155,35 +172,6 @@ public class DrawContentManager : ContentManager
         }
         return ContentDictionary[id];
     }
-    //public ParticleSystem.Particle[] Update(out int len)
-    //{
-    //    if (m_Particles == null || m_Particles.Length < ContentDictionary.Count)
-    //        m_Particles = new ParticleSystem.Particle[ContentDictionary.Count];
-    //    int idx = 0;
-    //    foreach (int id in ContentDictionary.Keys)
-    //    {
-    //        var content = (PointContent)ContentDictionary[id];
-    //        if (content.nObservation <= 0)
-    //        {
-    //            content.particle.remainingLifetime = -1f;
-    //        }
-    //        else
-    //        {
-    //            //m_Particles[idx].startColor = Color.cyan;
-    //            //m_Particles[idx].startSize = 0.05f;
-    //            //m_Particles[idx].remainingLifetime = 10f;
-    //            //m_Particles[idx++].position = content.s;
-    //            m_Particles[idx++] = content.particle;
-    //        }
-    //    }
-    //    for (int i = idx; i < m_Particles.Length; ++i)
-    //    {
-    //        m_Particles[i].remainingLifetime = -1f;
-    //    }
-    //    len = idx;
-    //    return m_Particles;
-    //    //mText.text = "draw test = " + idx + " " + ContentDictionary.Count;
-    //}
 }
 public class PathContentManager : ContentManager
 {
@@ -196,23 +184,7 @@ public class PathContentManager : ContentManager
         var c = ContentDictionary[id];
         c.obj.SetActive(true);
     }
-    public Content Process(int cid, int type, GameObject prefab, float sx, float sy, float sz, float ex, float ey, float ez, float s, Text mText) {
-        mText.text = "path path";
-        Vector3 sPos = new Vector3(sx, sy, sz);
-        Vector3 ePos = new Vector3(ex, ey, ez);
-        if (CheckContent(cid))
-        {
-            //갱신
-            UpdateContent(cid);
-        }
-        else
-        {
-            //추가
-            var newContent = new PathContent(cid, type, prefab, sPos, ePos, s, mText);
-            RegistContent(cid, newContent);
-        }
-        return ContentDictionary[cid];
-    }
+    
     public void Move(int id)
     {
         if (ContentDictionary.ContainsKey(id))
@@ -224,10 +196,19 @@ public class PathContentManager : ContentManager
 }
 public class ContentManager
 {
+
     public Dictionary<int, Content> ContentDictionary;
+    public GameObject pathObjPrefab;
+    public GameObject tempObjPrefab;
+
     public ContentManager()
     {
         ContentDictionary = new Dictionary<int, Content>();
+    }
+    public ContentManager(GameObject _obj, GameObject _path):this()
+    {
+        tempObjPrefab = _obj;
+        pathObjPrefab = _path;
     }
     public bool CheckContent(int id)
     {
@@ -244,21 +225,78 @@ public class ContentManager
         c.obj.SetActive(true);
         c.obj.transform.position = pos;
     }
-    public Content Process(int cid, int type, GameObject prefab, Color c, float x, float y, float z, float s, Text mText)
+    void UpdateContent(int id)
     {
-        Vector3 pos = new Vector3(x, y, z);
-        if (CheckContent(cid))
-        {
-            UpdateContent(cid, pos);
-        }
-        else
-        {
-            //create
-            var newContent = new Content(cid, type, prefab, pos, s, c, mText);
-            RegistContent(cid, newContent);
-        }
-        return ContentDictionary[cid];
+        var c = ContentDictionary[id];
+        c.obj.SetActive(true);
     }
+
+    public Content Process(int cid, int type, GameObject prefab, Color c, Vector3 pos, float s, Text mText)
+    {
+        try {
+            if (CheckContent(cid))
+            {
+                UpdateContent(cid, pos);
+            }
+            else
+            {
+                //create
+                var newContent = new Content(cid, type, prefab, pos, s, c, mText);
+                RegistContent(cid, newContent);
+            }
+            return ContentDictionary[cid];
+        }
+        catch(Exception e) {
+            mText.text = e.ToString();
+        }
+        return null;   
+    }
+
+    public Content DrawProcess(int id, int type, Vector3 spos, Vector3 epos, Vector3 normal, Color c, float size, Text mText)
+    {
+        try
+        {
+            if (CheckContent(id))
+            {
+                UpdateContent(id);
+            }
+            else
+            {
+                var newContent = new PointContent(id, type, spos, epos, normal, c.r, c.g, c.b, c.a, size);
+                RegistContent(id, newContent);
+            }
+        }
+        catch (Exception e)
+        {
+            mText.text = e.ToString();
+        }
+        return ContentDictionary[id];
+    }
+
+    public Content PathProcess(int cid, int type, GameObject prefab, Vector3 sPos, Vector3 ePos, float s, Text mText)
+    {
+        try {
+            
+            if (CheckContent(cid))
+            {
+                //갱신
+                UpdateContent(cid);
+            }
+            else
+            {
+                //추가
+                var newContent = new PathContent(cid, type, prefab, sPos, ePos, s, mText);
+                RegistContent(cid, newContent);
+            }
+            return ContentDictionary[cid];
+        }
+        catch(Exception e)
+        {
+            mText.text = e.ToString();
+        }
+        return null;
+    }
+
     public void Update()
     {
         foreach (int id in ContentDictionary.Keys)
@@ -268,6 +306,15 @@ public class ContentManager
             {
                 content.obj.SetActive(false);
             }
+        }
+    }
+
+    public void Move(int id)
+    {
+        if (ContentDictionary.ContainsKey(id))
+        {
+            var content = ContentDictionary[id];
+            content.obj.GetComponent<ObjectPath>().MoveStart();
         }
     }
 }

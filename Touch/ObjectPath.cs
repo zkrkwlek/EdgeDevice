@@ -48,7 +48,7 @@ public class ObjectPath : MonoBehaviour
         contentID = id;
         s = _s;
         e = _e;
-        speed = 0.1f;
+        speed = 0.2f;
         lineRenderer = gameObject.AddComponent<LineRenderer>();
         lineRenderer.material.color = new Color(0f, 1f, 1f, 0.2f);
         lineRenderer.startWidth = 0.01f;
