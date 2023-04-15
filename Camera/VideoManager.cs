@@ -15,7 +15,26 @@ public class VideoParam
     public bool bPlayed;
     public bool bShowLog;
     public string video_path;
+    public List<VideoData> videoLists;
+    //public VideoLists List;
 }
+[Serializable]
+public class VideoData
+{
+    public string file;
+    public bool bPlay;
+    public VideoData()
+    {
+        bPlay = false;
+    }
+    public VideoData(string _file):this()
+    {
+        file = _file;
+    }
+
+
+}
+
 
 public class VideoManager : MonoBehaviour
 {
@@ -36,11 +55,11 @@ public class VideoManager : MonoBehaviour
 
     bool WantsToQuit()
     {
-        File.WriteAllText(filename, JsonUtility.ToJson(param));
         if (param.bRecorded)
             StopRecord();
         else if (param.bPlayed)
-            StopPlayVidoe();
+            StopPlayVideo();
+        File.WriteAllText(filename, JsonUtility.ToJson(param));
         return true;
     }
     void OnEnable()
@@ -54,28 +73,60 @@ public class VideoManager : MonoBehaviour
 
     void Awake()
     {
+        //VideoParam testParam = new VideoParam();
+        //testParam.videoLists = new List<VideoData>();
+        //VideoData aaa = new VideoData("ori.mp4");
+        //VideoData bbb = new VideoData("asdf.mp4");
+        //bbb.bPlay = true;
+        //testParam.videoLists.Add(aaa);
+        //testParam.videoLists.Add(bbb);
+        //Debug.Log(JsonUtility.ToJson(testParam));
+
         //파라메터 로드
         dirPath = Application.persistentDataPath + "/data/Param";
         filename = dirPath + "/VideoManager.json";
+        
         if (!Directory.Exists(dirPath))
         {
             Directory.CreateDirectory(dirPath);
         }
+        var dirPath2 = Application.persistentDataPath + "/data/video";
         try
         {
             string strAddData = File.ReadAllText(filename);
             param = JsonUtility.FromJson<VideoParam>(strAddData);
-            //mText.text = "success load " + load_scripts;
+            if(param.bPlayed && !param.bRecorded)
+            {
+                foreach (VideoData vdata in param.videoLists)
+                {
+                    if (vdata.bPlay)
+                    {
+                        param.video_path = dirPath2 + "/" + vdata.file;
+                        break;
+                    }
+                }
+            }
+            if (param.bRecorded)
+            {
+                VideoData vdata = new VideoData(param.video_path);
+                param.videoLists.Add(vdata);
+            }
         }
         catch (Exception e)
         {
-            var dirPath2 = Application.persistentDataPath + "/data/video";
             if (!Directory.Exists(dirPath2))
             {
                 Directory.CreateDirectory(dirPath2);
             }
             param = new VideoParam();
             param.video_path = dirPath2 + "/video.mp4";
+            param.videoLists = new List<VideoData>();
+            DirectoryInfo di = new DirectoryInfo(dirPath2);
+            foreach (FileInfo file in di.GetFiles()) {
+                string name = file.Name;
+                VideoData temp = new VideoData(name);
+                param.videoLists.Add(temp);
+            }
         }
         Application.wantsToQuit += WantsToQuit;
         //파라메터 로드
@@ -200,7 +251,7 @@ public class VideoManager : MonoBehaviour
             mText.text = e.ToString();
         }
     }
-    void StopPlayVidoe()
+    void StopPlayVideo()
     {
         subsystem.StopPlayback();
     }
