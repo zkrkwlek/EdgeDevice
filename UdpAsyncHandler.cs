@@ -42,11 +42,22 @@ public class UdpData
         data = _data;
         ts = _ts;
     }
+    public UdpData(string _key, string _src, int _id, IntPtr _addr, int _len, double _ts)
+    {
+        keyword = _key;
+        src = _src;
+        id = _id;
+        addr = _addr;
+        length = _len;
+        ts = _ts;
+    }
     public string keyword, type1, type2, src;
     public byte[] data;
     public int id, id2;
     public double ts;
     public DateTime sendedTime, receivedTime;
+    public IntPtr addr;
+    public int length;
 }
 
 public class UdpAsyncHandler

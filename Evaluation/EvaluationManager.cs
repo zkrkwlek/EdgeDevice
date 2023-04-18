@@ -22,6 +22,8 @@ public class EvaluationManager : MonoBehaviour
     public StreamWriter writer_process;
     public bool bProcess;
 
+    public Dictionary<string, UdpData> DictCommuData;
+
     bool WantsToQuit()
     {
         if(mEvalParam.bServerLocalization)
@@ -76,6 +78,7 @@ public class EvaluationManager : MonoBehaviour
         {
             filePath = dirPath + "/eval_latency.csv";
             writer_latency = new StreamWriter(filePath, true);
+            DictCommuData = new Dictionary<string, UdpData>();
         }
         if (mEvalParam.bProcess)
         {

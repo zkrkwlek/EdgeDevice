@@ -4,12 +4,15 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.UI;
 
 
 public class TestManager : MonoBehaviour
 {
+
+
     //public CameraManager mCamManager;
     public DataCommunicator mSender;
     public SystemManager mSystemManager;
@@ -108,13 +111,17 @@ public class TestManager : MonoBehaviour
             {
                 //이미지 압축
                 Imgcodecs.imencode(".jpg", e.rgbMat.clone(), data, param);//jpg
-                byte[] bImgData = data.toArray();//mCamManager.m_Texture.EncodeToJPG(mSystemManager.AppData.JpegQuality);
-                var timeSpan = DateTime.UtcNow - mSystemManager.StartTime;
-                double ts = timeSpan.TotalMilliseconds;
+                //NDK로 전송
+                IntPtr addr = (IntPtr)data.dataAddr();
+                UdpData idata = new UdpData("Image", mSystemManager.User.UserName, frameID, addr, data.rows(), 0f);
+                mSender.SendDataWithNDK(idata);
 
                 ////서버로 전송   
-                UdpData idata = new UdpData("Image", mSystemManager.User.UserName, frameID, bImgData, ts);
-                StartCoroutine(mSender.SendData(idata));
+                //byte[] bImgData = data.toArray();//mCamManager.m_Texture.EncodeToJPG(mSystemManager.AppData.JpegQuality);
+                //var timeSpan = DateTime.UtcNow - mSystemManager.StartTime;
+                //double ts = timeSpan.TotalMilliseconds;
+                //UdpData idata = new UdpData("Image", mSystemManager.User.UserName, frameID, bImgData, ts);
+                //StartCoroutine(mSender.SendData(idata));
 
                 bSendImage = false;
                 if (bEdgeBase)
