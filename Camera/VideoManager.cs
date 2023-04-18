@@ -14,7 +14,8 @@ public class VideoParam
     public bool bRecorded;
     public bool bPlayed;
     public bool bShowLog;
-    public string video_path;
+    [NonSerialized] public string video_path;
+    public string filename;
     public List<VideoData> videoLists;
     //public VideoLists List;
 }
@@ -108,7 +109,8 @@ public class VideoManager : MonoBehaviour
             }
             if (param.bRecorded)
             {
-                VideoData vdata = new VideoData(param.video_path);
+                VideoData vdata = new VideoData(param.filename);
+                param.video_path = dirPath2 + "/" + vdata.file;
                 param.videoLists.Add(vdata);
             }
         }
@@ -120,6 +122,7 @@ public class VideoManager : MonoBehaviour
             }
             param = new VideoParam();
             param.video_path = dirPath2 + "/video.mp4";
+            param.filename = "video.mp4";
             param.videoLists = new List<VideoData>();
             DirectoryInfo di = new DirectoryInfo(dirPath2);
             foreach (FileInfo file in di.GetFiles()) {

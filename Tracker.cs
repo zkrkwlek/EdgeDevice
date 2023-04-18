@@ -192,7 +192,14 @@ public class Tracker : MonoBehaviour
             }
             if (mEvalParam.bServerLocalization && !mExParam.bEdgeBase)
             {
-                string res = "our,"+id+","+mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + ","+bRes;
+                string res;
+                if (mExParam.bEdgeBase)
+                {
+                    res = "base," + id + ",-1,-1," + bRes;
+                }
+                else {
+                    res = "our," + id + "," + mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + "," + bRes;
+                }
                 mEvalManager.writer_server_localization.WriteLine(res);
             }
             
@@ -205,21 +212,9 @@ public class Tracker : MonoBehaviour
 
     public void UpdateData(int id, int n, IntPtr ptr)
     {
-        bool bRes = true;
-        if (n < 1000)
-        {
-            bRes = false;
-        }
-        if (!mbSuccessInit && mExParam.bEdgeBase && bRes)
+        if (!mbSuccessInit && mExParam.bEdgeBase)
         {
             mbSuccessInit = true;
-        }
-        if (mEvalParam.bServerLocalization)
-        {
-            //성능 평가시
-            
-            string res = "base," + id + ",-1,-1," + bRes;
-            mEvalManager.writer_server_localization.WriteLine(res);
         }
         UpdateLocalMap(id, n, ptr);
     }

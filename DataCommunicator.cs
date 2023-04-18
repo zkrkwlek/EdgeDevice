@@ -262,7 +262,7 @@ public class DataCommunicator : MonoBehaviour
                     string res = "base local map,download," + data.id + ",-1," + req1.downloadHandler.data.Length +","+ ts;
                     mEvalManager.writer_latency.WriteLine(res);
                 }
-                if (mEvalParam.bNetworkTraffic && mExParam.bEdgeBase)
+                if (mEvalParam.bNetworkTraffic && mExParam.bEdgeBase)  
                 {
                     string res = "localmap," + data.id + ",-1,-1," + req1.downloadHandler.data.Length;
                     mEvalManager.writer_network_traffic.WriteLine(res);

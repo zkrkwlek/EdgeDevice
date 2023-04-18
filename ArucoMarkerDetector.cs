@@ -124,7 +124,8 @@ public class ArucoMarker{
     public int id;
     public int frameId; //마커를 디텍션한 최신 프레임의 아이디
     public List<Vector2> corners; //최신 프레임에서 코너 위치
-    
+    public Vector2 center;
+
     public Vector3 origin; //arcore 기준.
     public Vector3 origin2;//내 알고리즘 기준
     public VirtualObject gameobject; //필터링용. 이것은 azi, ele로 위치 측정할 때 이용
