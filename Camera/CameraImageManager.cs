@@ -108,9 +108,9 @@ public class CameraImageManager : MonoBehaviour
                 Mat distCoeffs = new MatOfDouble(0, 0, 0, 0);
                 float widthScale = ((float)Screen.width) / width;
                 float heightScale = ((float)Screen.height) / height;
-                float cropped = (height - (Screen.height / widthScale)) / 2f;//터치 영역 보정
-
-                CameraInitEvent.RunEvent(new CameraInitEventArgs(camMatrix, invCamMatrix, distCoeffs, (int)width, (int)height, widthScale, heightScale, cropped));
+                float cropped = (height - (Screen.height / widthScale)) / 2f;//터치 영역 보정 스크린에서 이미지로
+                float scaled = (height * widthScale - Screen.height) / 2f;
+                CameraInitEvent.RunEvent(new CameraInitEventArgs(camMatrix, invCamMatrix, distCoeffs, (int)width, (int)height, widthScale, heightScale, cropped, scaled));
                 bInit = true;
 
                 if(param.bShowLog)

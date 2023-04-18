@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CameraInitEventArgs : EventArgs
 {
-    public CameraInitEventArgs(Mat _cam, Mat _inv, Mat _dist, int _w, int _h, float _scale_w, float _scale_h, float _cropped)
+    public CameraInitEventArgs(Mat _cam, Mat _inv, Mat _dist, int _w, int _h, float _scale_w, float _scale_h, float _cropped, float _scaled)
     {
         camMat = _cam;
         invCamMat = _inv;
@@ -15,6 +15,7 @@ public class CameraInitEventArgs : EventArgs
         widthScale = _scale_w;
         heightScale = _scale_h;
         fHeightCropped = _cropped;
+        fImageToScreen = _scaled;
     }
     public Mat camMat { get; set; }
     public Mat invCamMat { get; set; }
@@ -23,7 +24,10 @@ public class CameraInitEventArgs : EventArgs
     public int height { get; set; }
     public float widthScale { get; set; }
     public float heightScale { get; set; }
+    //터치에서 이미지로 변환
     public float fHeightCropped { get; set; }
+    //이미지에서 터치 스크린으로 변환
+    public float fImageToScreen { get; set; }
 }
 
 class CameraInitEvent

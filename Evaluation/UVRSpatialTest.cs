@@ -11,6 +11,7 @@ public class UVRSpatialTest : MonoBehaviour
     public SystemManager mSystemManager;
     public DataCommunicator mSender;
     public ParameterManager mParamManager;
+    public PlaneManager mPlaneManager;
     public EvaluationManager mEvalManager;
     public PoseManager mPoseManager;
     public Text mText;
@@ -35,11 +36,14 @@ public class UVRSpatialTest : MonoBehaviour
     {
         
     }
-
+    bool bTouched = false;
     // Update is called once per frame
     void Update()
     {
-        
+        if (Input.touchCount > 0)
+        {
+            bTouched = true;
+        }
     }
     public void AttachObject(int id, float[] fdata)
     {
@@ -136,14 +140,28 @@ public class UVRSpatialTest : MonoBehaviour
             if (!isResolved(id))
             {
                 //호스트이면서 마커 객체가 생성되었을 때 등록요청을 아직 안했다면
-                if (mTestParam.bHost && marker.mbCreate && bReqMarker)
+                if (mTestParam.bHost && bReqMarker && bTouched)
                 {
                     if (mTestParam.bShowLog)
                         mText.text = "Marker Object Registration";
+
+                    ////코너 점으로 객체 생성하기
+                    //내 알고리즘으로 마커 생성
+                    var ray = mPlaneManager.CreateRay(marker.corners[0], invCamMatrix);
+                    float dist;
+                    Plane p;
+                    int pid;
+                    bool bRay = mPlaneManager.FindNearestPlane(ray, out pid, out p, out dist);
+                    if (bRay)
+                    {
+                        Vector3 newPos = ray.origin + ray.direction * dist;
+                        marker.gameobject.transform.position = newPos;
+                    }
                     AttachObject(id, marker.gameobject.transform);
 
                     var pos = marker.gameobject.transform.position;
                     var rot = marker.gameobject.transform.rotation;
+
                     float angle = 0f;
                     Vector3 axis = Vector3.zero;
                     rot.ToAngleAxis(out angle, out axis);
@@ -161,6 +179,7 @@ public class UVRSpatialTest : MonoBehaviour
                     UdpData mdata = new UdpData("VO.MARKER.CREATE", mSystemManager.User.UserName, id, bdata, 1.0);
                     StartCoroutine(mSender.SendData(mdata));
                     bReqMarker = false;
+                    bTouched = false;
                 }
                 //호스트가 아니면서 아직 마커 요청을 안했을 때
                 if (!mTestParam.bHost && bReqMarker)

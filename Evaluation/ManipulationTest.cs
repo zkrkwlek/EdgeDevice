@@ -173,8 +173,8 @@ public class ManipulationTest : MonoBehaviour
                     {
                         if(voState==VirtualObjectManipulationState.Registration)
                             StartCoroutine(ChangeColor(new Vector4(1f, 0f, 0f, 0.3f)));
-                        byte[] bdata = new byte[fdata.Length * 4];
-                        Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length); //전체 실수형 데이터 수
+                        //byte[] bdata = new byte[fdata.Length * 4];
+                        //Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length); //전체 실수형 데이터 수
 
                         //자기 자신 포함 : length+id+type +3xvector3+scale
                         byte[] bdata2 = ContentData.Generate(13f, sendID, (float)ContentType.Object,newPos.x, newPos.y, newPos.z, axis.x, axis.y, axis.z, mObjParam.objColor.r, mObjParam.objColor.g, mObjParam.objColor.b, mObjParam.fTempObjScale);

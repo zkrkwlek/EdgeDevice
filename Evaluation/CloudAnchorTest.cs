@@ -51,7 +51,6 @@ public class CloudAnchorTest : MonoBehaviour
     public PoseManager mPoseManager;
     public EvaluationManager mEvalManager;
 
-    EvaluationParam mEvalParam;
     ExperimentParam mExperimentParam;
     TrackerParam mTrackerParam;
     ObjectParam mObjParam;
@@ -60,6 +59,8 @@ public class CloudAnchorTest : MonoBehaviour
     bool mbCamInit = false;
     Mat camMatrix;
     Mat invCamMatrix;
+    float widthScale;
+    float offset;
 
     public enum Mode { READY, HOST, HOST_PROGRESS, HOST_PENDING, RESOLVE, RESOLVE_PENDING };
     public Mode mode = Mode.READY;
@@ -118,21 +119,6 @@ public class CloudAnchorTest : MonoBehaviour
 
     void Awake()
     {
-        ////파라메터 로드
-        //dirPath = Application.persistentDataPath + "/data/Param";
-        //filename = dirPath + "/CloudAnchorTest.json";
-        //try
-        //{
-        //    string strAddData = File.ReadAllText(filename);
-        //    param = JsonUtility.FromJson<AnchorParam>(strAddData);
-        //    //mText.text = "success load " + load_scripts;
-        //}
-        //catch (Exception e)
-        //{
-        //    param = new AnchorParam();
-        //    param.bHost = true;
-        //}
-        ////파라메터 로드
 
         mExperimentParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
         mTrackerParam = (TrackerParam)mParamManager.DictionaryParam["Tracker"];
@@ -176,7 +162,6 @@ public class CloudAnchorTest : MonoBehaviour
             mode = Mode.HOST;
         }
         mObjParam = (ObjectParam)mParamManager.DictionaryParam["VirtualObject"];
-        mEvalParam = (EvaluationParam)mParamManager.DictionaryParam["Evaluation"];
         scale = mObjParam.fTempObjScale;
         mResolvedAnchors = new Dictionary<int, string>();
         mAnchorObjects = new Dictionary<int, GameObject>();
@@ -205,6 +190,8 @@ public class CloudAnchorTest : MonoBehaviour
         mbCamInit = true;
         camMatrix = e.camMat;
         invCamMatrix = e.invCamMat;
+        widthScale = e.widthScale;
+        offset = e.fImageToScreen;
         //카메라 정보 받기
         //Kinv = new Mat(3, 3, CvType.CV_64FC1);
         //mCamManager.invCamMatrix.copyTo(Kinv);
@@ -235,7 +222,7 @@ public class CloudAnchorTest : MonoBehaviour
             }
             if(mode == Mode.HOST_PROGRESS)
             {
-                HostProgressing();
+                HostProgressing2();
             }
             if (mode == Mode.HOST_PENDING)
             {
@@ -259,6 +246,7 @@ public class CloudAnchorTest : MonoBehaviour
             int id = args.id;
             if (isAttached(id))
                 return;
+            //mText.text = args.id + " is attached";
             AddMarkerID(args.id, args.strid);
             //리졸빙으로 넘어가는 것은 이걸 이미 받아온적이 있는지 체크한 후
             //딕셔너리로 관리하기
@@ -282,7 +270,7 @@ public class CloudAnchorTest : MonoBehaviour
         try
         {
             marker = me.marker;
-            if (mExperimentParam.bHost && marker.mbCreate)
+            if (mExperimentParam.bHost)
             {
                 bMarkerDetected = true;
             }
@@ -313,36 +301,34 @@ public class CloudAnchorTest : MonoBehaviour
                 //앵커와 거리를 계산.
                 if (!isResolved(id))
                 {
-                    //if (param.bShowLog)
-                    //{
-                    //    if(mode == H)
+                    //if (mExperimentParam.bShowLog)
                     //    mText.text = "marker " + id + " is not resolved";
-                    //}
                     return;
                 }
                 int fid = me.marker.frameId;
-                if (mPoseManager.CheckPose(fid))
+                //if (mPoseManager.CheckPose(fid))
+                //{
+
+                //}
+                //var trans = mPoseManager.GetPose(fid);
+                var trans = Camera.main.transform;
+                var anchorObj = mAnchorObjects[id];
+                float azi = 0f;
+                float ele = 0f;
+                float dist = 0f;
+                Vector2 temp = Vector2.zero;
+                marker.CalculateAziAndEleAndDist(trans.position, out azi, out ele, out dist);
+                float err = marker.Calculate(trans.worldToLocalMatrix, camMatrix, anchorObj.transform.position, marker.corners[0], out temp, false);
+                if (mExperimentParam.bShowLog)
                 {
-                    var trans = mPoseManager.GetPose(fid);
-                    var anchorObj = mAnchorObjects[id];
-                    float azi = 0f;
-                    float ele = 0f;
-                    float dist = 0f;
-                    Vector2 temp = Vector2.zero;
-                    marker.CalculateAziAndEleAndDist(trans.position, out azi, out ele, out dist);
-                    float err = marker.Calculate(trans.worldToLocalMatrix, camMatrix, anchorObj.transform.position, marker.corners[0], out temp, false);
-                    if (mExperimentParam.bShowLog)
-                    {
-                        mText.text = temp.ToString() + marker.corners[0].ToString() + " == " + err;
-                    }
-                    //if (err < 1000f)
-                    if (mEvalParam.bConsistency)
-                    {
-                        string res = "ARCore," + marker.frameId + ",-1,-1," + dist + "," + azi + "," + ele + "," + err + ",TRUE";
-                        mEvalManager.writer_consistency.WriteLine(res);
-                    }
+                    mText.text = temp.ToString() + marker.corners[0].ToString() + " == " + err;
                 }
-               
+                //if (err < 1000f)
+                if (mEvalManager.bConsistency)
+                {
+                    string res = "ARCore," + marker.frameId + ",-1,-1," + dist + "," + azi + "," + ele + "," + err + ",TRUE";
+                    mEvalManager.writer_consistency.WriteLine(res);
+                }
             }
         }
         catch (Exception e)
@@ -356,14 +342,6 @@ public class CloudAnchorTest : MonoBehaviour
         FeatureMapQuality quality = anchorManager.EstimateFeatureMapQualityForHosting(GetCameraPose());
         if (quality == FeatureMapQuality.Sufficient || quality == FeatureMapQuality.Good)
         {
-            //Pose pose = new Pose(marker.gameobject.transform.position, marker.gameobject.transform.rotation);
-            //localAnchor = anchorManager.AddAnchor(pose);
-            //cloudAnchor = anchorManager.HostCloudAnchor(localAnchor, 1);
-            
-            //if (cloudAnchor != null)
-            //{
-            //    mode = Mode.HOST_PENDING;
-            //}
             mode = Mode.HOST_PROGRESS;
 
             if (mExperimentParam.bShowLog)
@@ -380,28 +358,60 @@ public class CloudAnchorTest : MonoBehaviour
 
     private List<ARRaycastHit> hits = new List<ARRaycastHit>();
 
-    void HostProgressing2()
+    void HostProgressing()
     {
         try
         {
             ////터치 인식하고 마커 인식 해야 함.
             if (Input.touchCount == 0)
                 return;
+            if (!bMarkerDetected)
+            {
+                mText.text = "ArUco marker is not detected";
+                return;
+            }
 
+            Pose pose = new Pose(marker.gameobject.transform.position, marker.gameobject.transform.rotation);
+            localAnchor = anchorManager.AddAnchor(pose);
+            cloudAnchor = anchorManager.HostCloudAnchor(localAnchor, 1);
+
+            mid = marker.id;
+
+            if (cloudAnchor != null)
+            {
+                mode = Mode.HOST_PENDING;
+            }
+        }
+        catch (Exception e)
+        {
+            mText.text = e.ToString();
+        }
+
+    }
+
+    void HostProgressing2()
+    {
+        try
+        {
+            //마커가 인식되어야 함
+            if (!bMarkerDetected)
+                return;
+            ////터치 인식하고 마커 인식 해야 함.
+            if (Input.touchCount == 0)
+                return;
             Touch touch = Input.GetTouch(0);
             if (touch.phase != TouchPhase.Began)
                 return;
-            Vector2 pos = marker.corners[0];
+            
+            Vector2 pos = marker.corners[0]*widthScale;
+            pos.y -= offset;
+
             if (mRaycastManager.Raycast(pos, hits, TrackableType.PlaneWithinPolygon))
             {
                 //Pose pose = new Pose(marker.gameobject.transform.position, marker.gameobject.transform.rotation);
                 localAnchor = anchorManager.AddAnchor(hits[0].pose);
                 cloudAnchor = anchorManager.HostCloudAnchor(localAnchor, 1);
-                mid++;
-
-                //var trans = localAnchor.transform;//marker.gameobject.transform;
-                //var obj1 = Instantiate(prefabObj, trans.position, trans.rotation);
-                //obj1.GetComponent<Renderer>().material.color = Color.red;
+                mid = marker.id;
             }
 
             if (cloudAnchor != null)
@@ -425,34 +435,7 @@ public class CloudAnchorTest : MonoBehaviour
         mode = Mode.HOST_PROGRESS;
         count = 0;
     }
-    void HostProgressing()
-    {
-        try {
-            ////터치 인식하고 마커 인식 해야 함.
-            if (Input.touchCount == 0)
-                return;
-            if (!bMarkerDetected) {
-                mText.text = "ArUco marker is not detected";
-                return;
-            }
-
-            Pose pose = new Pose(marker.gameobject.transform.position, marker.gameobject.transform.rotation);
-            localAnchor = anchorManager.AddAnchor(pose);
-            cloudAnchor = anchorManager.HostCloudAnchor(localAnchor, 1);
-
-            mid = marker.id;
-
-            if (cloudAnchor != null)
-            {
-                mode = Mode.HOST_PENDING;
-            }
-        }
-        catch (Exception e)
-        {
-            mText.text = e.ToString();
-        }
-
-    }
+    
     void HostPending()
     {
         try {

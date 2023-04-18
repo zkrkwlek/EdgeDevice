@@ -637,52 +637,37 @@ public class ArucoMarkerDetector : MonoBehaviour
                     //마커 프레임 아이디 갱신
                     marker.frameId = mnFrameID;
 
-                    if (bTouched) {
-                        if (mTrackerParam.bTracking)
-                        {
-                            //내 알고리즘으로 마커 생성
-                            var ray = mPlaneManager.CreateRay(marker.corners[0], invCamMatrix);
-                            float dist;
-                            Plane p;
-                            int pid;
-                            bool bRay = mPlaneManager.FindNearestPlane(ray, out pid, out p, out dist);
-                            if (bRay)
-                            {
-                                Vector3 newPos = ray.origin + ray.direction * dist;
-                                marker.gameobject.transform.position = newPos;
-                            }
-                        }
-                        else {
-                            using (Mat rvec = new Mat(1, 1, CvType.CV_64FC3))
-                            using (Mat tvec = new Mat(1, 1, CvType.CV_64FC3))
-                            using (Mat corner_4x1 = corners[i].reshape(2, 4)) // 1*4*CV_32FC2 => 4*1*CV_32FC2
-                            using (MatOfPoint2f imagePoints = new MatOfPoint2f(corner_4x1))
-                            {
-                                Calib3d.solvePnP(objPoints, imagePoints, camMatrix, distCoeffs, rvec, tvec);
-                                marker.ARM = UpdateARObjectTransform(rvec, tvec);
-                                //var trans = mPoseManager.GetPose(mnFrameID);
-                                marker.UpdateObject(new Vector4(0f, 0f, 0f, 1f), markerLength, Camera.main.transform);
-                            }
-                        }
-                        marker.mbCreate = true;
-                        bTouched = false;
-                    }
-
-                    //if (bPoseEstimation)
-                    //{
-                    //    ///마커에서 포즈
-                    //    Mat rvec = new Mat(rvecs, new OpenCVForUnity.CoreModule.Rect(0, i, 1, 1));
-                    //    Mat tvec = new Mat(tvecs, new OpenCVForUnity.CoreModule.Rect(0, i, 1, 1));
-                    //    marker.ARM = UpdateARObjectTransform(rvec, tvec);
-                    //    //가상 객체의 변환된 3차원 위치를 필터링으로 기록함.
-                    //    marker.UpdateObject(new Vector4(-markerLength / 2, -markerLength / 2, 0.0f, 1.0f), markerLength, fitARFoundationBackgroundMatrix, fitHelpersFlipMatrix, Camera.main.gameObject);
-                    //    
-
-                    //    ////데이터에 기록
-                    //    fdata[i * 3 + 1] = (float)id;
-                    //    fdata[i * 3 + 2] = marker.corners[0].x;
-                    //    fdata[i * 3 + 3] = marker.corners[0].y;
+                    //if (bTouched) {
+                    //    if (mTrackerParam.bTracking)
+                    //    {
+                    //        //내 알고리즘으로 마커 생성
+                    //        var ray = mPlaneManager.CreateRay(marker.corners[0], invCamMatrix);
+                    //        float dist;
+                    //        Plane p;
+                    //        int pid;
+                    //        bool bRay = mPlaneManager.FindNearestPlane(ray, out pid, out p, out dist);
+                    //        if (bRay)
+                    //        {
+                    //            Vector3 newPos = ray.origin + ray.direction * dist;
+                    //            marker.gameobject.transform.position = newPos;
+                    //        }
+                    //    }
+                    //    else {
+                    //        using (Mat rvec = new Mat(1, 1, CvType.CV_64FC3))
+                    //        using (Mat tvec = new Mat(1, 1, CvType.CV_64FC3))
+                    //        using (Mat corner_4x1 = corners[i].reshape(2, 4)) // 1*4*CV_32FC2 => 4*1*CV_32FC2
+                    //        using (MatOfPoint2f imagePoints = new MatOfPoint2f(corner_4x1))
+                    //        {
+                    //            Calib3d.solvePnP(objPoints, imagePoints, camMatrix, distCoeffs, rvec, tvec);
+                    //            marker.ARM = UpdateARObjectTransform(rvec, tvec);
+                    //            //var trans = mPoseManager.GetPose(mnFrameID);
+                    //            marker.UpdateObject(new Vector4(0f, 0f, 0f, 1f), markerLength, Camera.main.transform);
+                    //        }
+                    //    }
+                    //    marker.mbCreate = true;
+                    //    bTouched = false;
                     //}
+                                        
                     if(param.bShowLog)
                         mText.text = "marker test = " +mnFrameID +" = "+ ids.total();
                     MarkerDetectEvent.RunEvent(new MarkerDetectEventArgs(marker));
@@ -708,51 +693,7 @@ public class ArucoMarkerDetector : MonoBehaviour
     //마커와 카메라 사이의 포즈 계산
     private Matrix4x4 UpdateARObjectTransform(Mat rvec, Mat tvec)
     {
-        //Matrix4x4 ARM;
-        //// Convert to unity pose data.
-        //double[] rvecArr = new double[3];
-        //rvec.get(0, 0, rvecArr);
-        //double[] tvecArr = new double[3];
-        //tvec.get(0, 0, tvecArr);
-        //PoseData poseData = ARUtils.ConvertRvecTvecToPoseData(rvecArr, tvecArr);
-        //ARM = ARUtils.ConvertPoseDataToMatrix(ref poseData, true);
-
-        ////// Convert to transform matrix.
-        ////try
-        ////{
-
-
-        ////    //// Apply the effect (flipping factors) of the projection matrix applied to the ARCamera by the ARFoundationBackground component to the ARM.
-        ////    //ARM = fitARFoundationBackgroundMatrix * ARM * obj;
-
-        ////    //// When detecting the AR marker from a horizontal inverted image (front facing camera),
-        ////    //// will need to apply an inverted X matrix to the transform matrix to match the ARFoundationBackground component display.
-        ////    //ARM = fitHelpersFlipMatrix * ARM;
-
-        ////    //ARM = arCamera.transform.localToWorldMatrix * ARM;
-
-        ////    //marker.gameobject.SetMatrix4x4(ARM);
-
-
-        ////    //mText.text = fitARFoundationBackgroundMatrix.ToString()+"\n"+fitHelpersFlipMatrix.ToString();
-
-        ////    //if (enableLerpFilter)
-        ////    //{
-        ////    //    arGameObject.SetMatrix4x4(ARM);
-        ////    //}
-        ////    //else
-        ////    //{
-        ////    //    ARUtils.SetTransformFromMatrix(arGameObject.transform, ref ARM);
-        ////    //}
-
-        ////    //mText.text = poseData.pos.ToString();
-        ////    mText.text = "markder detection~~";
-        ////}
-        ////catch (Exception e)
-        ////{
-        ////    mText.text = e.ToString();
-        ////}
-
+        
         double[] tvecArr = new double[3];
         tvec.get(0, 0, tvecArr);
 
@@ -813,9 +754,9 @@ public class ArucoMarkerDetector : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(Input.touchCount > 0)
-        {
-            bTouched = true;
-        }
+        //if(Input.touchCount > 0)
+        //{
+        //    bTouched = true;
+        //}
     }
 }
