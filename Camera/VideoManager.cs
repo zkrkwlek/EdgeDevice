@@ -73,11 +73,9 @@ public class VideoManager : MonoBehaviour
         
     }
 
-    IEnumerator ChangeColor(Vector4 c)
+    void ChangeColor(Vector4 c)
     {
         rawImage.color = c;
-        yield return new WaitForSecondsRealtime(0.3f);
-        rawImage.color = new Vector4(0f, 0f, 0f, 0f);
     }
 
     void Awake()
@@ -162,7 +160,7 @@ public class VideoManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!bStart  && (param.bPlayed || param.bRecorded) && session.subsystem is ARCoreSessionSubsystem _subsystem)
+        if ((param.bPlayed || param.bRecorded) && session.subsystem is ARCoreSessionSubsystem _subsystem)
         {
             subsystem = _subsystem;
             subsession = subsystem.session;
@@ -179,21 +177,24 @@ public class VideoManager : MonoBehaviour
             if (param.bShowLog)
                 mText.text = "success set subsystem";
 
-            bStart = true;
-            if (param.bRecorded)
+            if (!bStart)
             {
-                StartRecord();
-            }
-            else if (param.bPlayed)
-            {
-                if (mExParam.bLocalizationTest && playbackStatus == ArPlaybackStatus.Finished)
+                bStart = true;
+                if (param.bRecorded)
                 {
-                    ChangeColor(new Vector4(0f, 1f, 1f, 0.3f));
+                    StartRecord();
                 }
-                StartPlayVideo();
+                else if (param.bPlayed)
+                {
+                    StartPlayVideo();
+                }
+            }
+            if (mExParam.bLocalizationTest && playbackStatus == ArPlaybackStatus.Finished)
+            {
+                ChangeColor(new Vector4(0f, 1f, 1f, 0.3f));
+                //StopPlayVideo();
             }
         }
-
     }
 
     void StartRecord()
@@ -221,7 +222,7 @@ public class VideoManager : MonoBehaviour
     void StartPlayVideo() {
         try
         {
-            subsystem.StartPlayback(param.video_path);
+            var status = subsystem.StartPlayback(param.video_path);
         }
         catch (Exception e)
         {

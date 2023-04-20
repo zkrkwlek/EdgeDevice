@@ -89,7 +89,7 @@ public class ParameterManager : MonoBehaviour
     
     bool WantsToQuit()
     {
-        if (mExperimentParam.bLocalizationTest)
+        if (mExperimentParam.bLocalizationTest && !mExperimentParam.bEdgeBase)
         {
             mTrackerParam.nSkipFrames++;
             if(mTrackerParam.nSkipFrames > 15)
