@@ -36,23 +36,24 @@ public class VideoData
 
 }
 
+//https://github.com/Unity-Technologies/arfoundation-samples/blob/main/Assets/Scenes/ARCore/ARCoreSessionRecorder.cs
 
 public class VideoManager : MonoBehaviour
 {
     string dirPath, filename;
+    public ParameterManager mParamManager;
     VideoParam param;
+    ExperimentParam mExParam;
     public ARSession session;
     ArSession subsession;
-    //ARRecordingManager recordingManager;
-    //ARPlaybackManager playbackManager;
-
+    
     ARCoreSessionSubsystem subsystem;
     ArPlaybackStatus playbackStatus;
     ArRecordingStatus recordingStatus;
 
     bool setPlaybackDataset;
-
     public Text mText;
+    public RawImage rawImage;
 
     bool WantsToQuit()
     {
@@ -70,6 +71,13 @@ public class VideoManager : MonoBehaviour
     void OnDisable()
     {
         
+    }
+
+    IEnumerator ChangeColor(Vector4 c)
+    {
+        rawImage.color = c;
+        yield return new WaitForSecondsRealtime(0.3f);
+        rawImage.color = new Vector4(0f, 0f, 0f, 0f);
     }
 
     void Awake()
@@ -94,6 +102,7 @@ public class VideoManager : MonoBehaviour
         var dirPath2 = Application.persistentDataPath + "/data/video";
         try
         {
+            mExParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
             string strAddData = File.ReadAllText(filename);
             param = JsonUtility.FromJson<VideoParam>(strAddData);
             if(param.bPlayed && !param.bRecorded)
@@ -147,46 +156,7 @@ public class VideoManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        //try{
-
-        //    if (session.subsystem is ARCoreSessionSubsystem _subsystem)
-        //    {
-        //        subsystem = _subsystem;
-        //        subsession = subsystem.session;
-        //        if (subsession == null)
-        //        {
-        //            if (param.bShowLog)
-        //                mText.text = "fail set subsystem";
-        //            return;
-        //        }
-                    
-        //        playbackStatus = subsystem.playbackStatus;
-        //        recordingStatus = subsystem.recordingStatus;
-
-        //        if (param.bShowLog)
-        //            mText.text = "success set subsystem";
-        //    }
-        //    else
-        //    {
-        //        if (param.bShowLog)
-        //            mText.text = "fail set subsystem";
-        //        return;
-        //    }
-                
-
-
-        //    if (param.bRecorded)
-        //    {
-        //        StartRecord();
-        //    }else if (param.bPlayed)
-        //    {
-        //        SetPlayVideo();
-        //    }
-        //}
-        //catch(Exception e)
-        //{
-        //    mText.text = e.ToString();
-        //}
+       
     }
 
     // Update is called once per frame
@@ -216,7 +186,11 @@ public class VideoManager : MonoBehaviour
             }
             else if (param.bPlayed)
             {
-                SetPlayVideo();
+                if (mExParam.bLocalizationTest && playbackStatus == ArPlaybackStatus.Finished)
+                {
+                    ChangeColor(new Vector4(0f, 1f, 1f, 0.3f));
+                }
+                StartPlayVideo();
             }
         }
 
@@ -244,7 +218,7 @@ public class VideoManager : MonoBehaviour
         subsystem.StopRecording();   
         //recordingManager.StopRecording();
     }
-    void SetPlayVideo() {
+    void StartPlayVideo() {
         try
         {
             subsystem.StartPlayback(param.video_path);

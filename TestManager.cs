@@ -116,13 +116,6 @@ public class TestManager : MonoBehaviour
                 UdpData idata = new UdpData("Image", mSystemManager.User.UserName, frameID, addr, data.rows(), 0f);
                 mSender.SendDataWithNDK(idata);
 
-                ////서버로 전송   
-                //byte[] bImgData = data.toArray();//mCamManager.m_Texture.EncodeToJPG(mSystemManager.AppData.JpegQuality);
-                //var timeSpan = DateTime.UtcNow - mSystemManager.StartTime;
-                //double ts = timeSpan.TotalMilliseconds;
-                //UdpData idata = new UdpData("Image", mSystemManager.User.UserName, frameID, bImgData, ts);
-                //StartCoroutine(mSender.SendData(idata));
-
                 bSendImage = false;
                 if (bEdgeBase)
                     bNeedNewKF = false;

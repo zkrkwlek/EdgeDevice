@@ -190,12 +190,12 @@ public class Tracker : MonoBehaviour
             {
                 mbSuccessInit = true;
             }
-            if (mEvalParam.bServerLocalization && !mExParam.bEdgeBase)
+            if (mEvalParam.bServerLocalization)
             {
                 string res;
                 if (mExParam.bEdgeBase)
                 {
-                    res = "base," + id + ",-1,-1," + bRes;
+                    res = "base," + id + ",-1,-1," + bRes + "," + mbSuccessInit;
                 }
                 else {
                     res = "our," + id + "," + mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + "," + bRes;

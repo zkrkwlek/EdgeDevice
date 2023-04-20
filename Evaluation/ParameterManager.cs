@@ -52,6 +52,7 @@ public class ArUcoMarkerParam : Param
 [Serializable]
 class ExperimentParam : Param
 {
+    public bool bLocalizationTest;
     public bool bCreateKFMethod; //트루이면 without Desc, false이면 with Desc
     public bool bEdgeBase;
     public bool bHost; //등록 모드 일 때
@@ -88,6 +89,19 @@ public class ParameterManager : MonoBehaviour
     
     bool WantsToQuit()
     {
+        if (mExperimentParam.bLocalizationTest)
+        {
+            mTrackerParam.nSkipFrames++;
+            if(mTrackerParam.nSkipFrames > 15)
+            {
+                mTrackerParam.nSkipFrames = 2;
+                mTrackerParam.nJpegQuality += 10;
+                if(mTrackerParam.nJpegQuality > 100)
+                {
+                    mTrackerParam.nJpegQuality = 10;
+                }
+            }
+        }
         File.WriteAllText(dirPath + "/Tracker.json", JsonUtility.ToJson(mTrackerParam));
         File.WriteAllText(dirPath + "/MarkerParam.json", JsonUtility.ToJson(mMarkerParam));
         File.WriteAllText(dirPath + "/ExperimentParam.json", JsonUtility.ToJson(mExperimentParam));
