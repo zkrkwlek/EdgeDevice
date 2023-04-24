@@ -55,6 +55,7 @@ public class CloudAnchorTest : MonoBehaviour
     TrackerParam mTrackerParam;
     ObjectParam mObjParam;
     float scale;
+    public RawImage rawImage;
 
     bool mbCamInit = false;
     Mat camMatrix;
@@ -78,6 +79,8 @@ public class CloudAnchorTest : MonoBehaviour
     public Dictionary<int, string> mResolvedAnchors;
     [HideInInspector]
     public Dictionary<int, GameObject> mAnchorObjects;
+
+
 
     bool WantsToQuit()
     {
@@ -117,13 +120,20 @@ public class CloudAnchorTest : MonoBehaviour
         }
     }
 
+    IEnumerator ChangeColor(Vector4 c)
+    {
+        rawImage.color = c;
+        yield return new WaitForSecondsRealtime(0.3f);
+        rawImage.color = new Vector4(0f, 0f, 0f, 0f);
+    }
+
     void Awake()
     {
 
         mExperimentParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
         mTrackerParam = (TrackerParam)mParamManager.DictionaryParam["Tracker"];
 
-        if (mTrackerParam.bTracking || !mExperimentParam.bRegistrationTest)
+        if (mTrackerParam.bTracking ||(!mExperimentParam.bRegistrationTest && !mExperimentParam.bManipulationTest))
         {
             enabled = false;
             return;
@@ -161,6 +171,8 @@ public class CloudAnchorTest : MonoBehaviour
         {
             mode = Mode.HOST;
         }
+        if (mExperimentParam.bManipulationTest)
+            bMarkerDetected = true;
         mObjParam = (ObjectParam)mParamManager.DictionaryParam["VirtualObject"];
         scale = mObjParam.fTempObjScale;
         mResolvedAnchors = new Dictionary<int, string>();
@@ -239,18 +251,28 @@ public class CloudAnchorTest : MonoBehaviour
         }
     }
 
+    DateTime startTime;
+
     void OnListenAnchor(object sender, AnchorListenArgs args)
     {
+        if (mExperimentParam.bHost) {
+            int id = args.id;
+            if (isAttached(id))
+                return;
+            AddMarkerID(args.id, args.strid);
+            mid = id;
+        }
+            
         if (!mExperimentParam.bHost && mode == Mode.READY)
         {
             int id = args.id;
             if (isAttached(id))
                 return;
-            //mText.text = args.id + " is attached";
             AddMarkerID(args.id, args.strid);
             //리졸빙으로 넘어가는 것은 이걸 이미 받아온적이 있는지 체크한 후
             //딕셔너리로 관리하기
             try {
+                startTime = DateTime.UtcNow;
                 cloudAnchor = anchorManager.ResolveCloudAnchorId(args.strid);
                 if(cloudAnchor != null)
                 {
@@ -276,26 +298,8 @@ public class CloudAnchorTest : MonoBehaviour
             }
 
             int id = me.marker.id;
-            //if (!me.marker.mbCreate && param.bHost && mode == Mode.READY)
-            //{
-
-            //    mode = Mode.HOST;
-            //    marker.mbCreate = true;
-                
-                
-            //    //var obj2 = Instantiate(prefabObj, trans.localPosition, trans.localRotation);
-
-            //    //obj1.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-            //    //obj2.GetComponent<Renderer>().material.color = Color.green;
-            //    //obj1.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
-
-            //    //마커 생성안했으면 해야 함.
-            //    //이전 실행시 마커 생성한게 있으면 생성안해야 함.
-            //    //mText.text = "Create Marker~~";
-            //}
 
             //호스트 일 때
-
             if (!mExperimentParam.bHost)
             {
                 //앵커와 거리를 계산.
@@ -323,11 +327,11 @@ public class CloudAnchorTest : MonoBehaviour
                 {
                     mText.text = temp.ToString() + marker.corners[0].ToString() + " == " + err;
                 }
-                //if (err < 1000f)
+                
                 if (mEvalManager.bConsistency)
                 {
                     string res = "ARCore," + marker.frameId + ",-1,-1," + dist + "," + azi + "," + ele + "," + err + ",TRUE";
-                    mEvalManager.writer_consistency.WriteLine(res);
+                    mEvalManager.mConsistencyTask.AddMessage(res);
                 }
             }
         }
@@ -402,16 +406,30 @@ public class CloudAnchorTest : MonoBehaviour
             Touch touch = Input.GetTouch(0);
             if (touch.phase != TouchPhase.Began)
                 return;
-            
-            Vector2 pos = marker.corners[0]*widthScale;
-            pos.y -= offset;
+
+            startTime = DateTime.UtcNow;
+            Vector2 pos = Vector2.zero;
+            if(mExperimentParam.bRegistrationTest)
+            {
+                //생성 테스트에서는 마커의 위치로 부터 가상 객체를 생성함
+                //이미지에서 스크린 좌표게로 변경함
+                pos = marker.corners[0] * widthScale;
+                pos.y -= offset;
+                mid = marker.id;
+            }
+            if (mExperimentParam.bManipulationTest)
+            {
+                //실제 터치시 가상 객체의 위치를 생성함
+                pos = touch.position;
+                ++mid;
+            }
 
             if (mRaycastManager.Raycast(pos, hits, TrackableType.PlaneWithinPolygon))
             {
                 //Pose pose = new Pose(marker.gameobject.transform.position, marker.gameobject.transform.rotation);
                 localAnchor = anchorManager.AddAnchor(hits[0].pose);
                 cloudAnchor = anchorManager.HostCloudAnchor(localAnchor, 1);
-                mid = marker.id;
+                StartCoroutine(ChangeColor(new Vector4(1f, 0f, 0f, 0.3f)));
             }
 
             if (cloudAnchor != null)
@@ -442,6 +460,13 @@ public class CloudAnchorTest : MonoBehaviour
             
             if (cloudAnchor.cloudAnchorState == CloudAnchorState.Success)
             {
+                if (mEvalManager.bProcess)
+                {
+                    var timeSpan2 = DateTime.UtcNow - startTime;
+                    string res = "ARCore,Hosting," + timeSpan2.TotalMilliseconds;
+                    mEvalManager.mProcessTask.AddMessage(res);
+                }
+
                 //여기서 데이터 전송            
                 string strAnchorID = cloudAnchor.cloudAnchorId;
                 byte[] bdata = Encoding.UTF8.GetBytes(strAnchorID);
@@ -452,7 +477,9 @@ public class CloudAnchorTest : MonoBehaviour
                 var obj1 = Instantiate(prefabObj, trans.position, trans.rotation);
                 obj1.GetComponent<Renderer>().material.color = Color.red;
                 obj1.transform.localScale = new Vector3(scale, scale, scale);
-                //Reset();
+                
+                if(mExperimentParam.bManipulationTest)
+                    Reset();
 
                 if (mExperimentParam.bShowLog)
                     mText.text = "Success create cloud anchor = " + mid + ", " + strAnchorID;
@@ -490,6 +517,12 @@ public class CloudAnchorTest : MonoBehaviour
         if (cloudAnchor.cloudAnchorState == CloudAnchorState.Success)
         {
             try {
+                if (mEvalManager.bProcess)
+                {
+                    var timeSpan2 = DateTime.UtcNow - startTime;
+                    string res = "ARCore,Resolving," + timeSpan2.TotalMilliseconds;
+                    mEvalManager.mProcessTask.AddMessage(res);
+                }
                 AttachObject(anchorInfo.id, cloudAnchor.transform);
                 mode = Mode.READY;
                 if (mExperimentParam.bShowLog)

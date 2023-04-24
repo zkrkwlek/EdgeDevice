@@ -106,11 +106,16 @@ public class ContentData
 {
     static public byte[] Generate(params float[] fdata)
     {
-        byte[] bdata = new byte[fdata.Length * 4];
-        Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length);
+        //byte[] bdata = new byte[fdata.Length * 4];
+        //Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length);
+        byte[] bdata = new byte[5000];
+        Buffer.BlockCopy(fdata, 0, bdata, 0, fdata.Length*4);
         return bdata;
     }
-
+    static public float[] GenerateFloatArray(params float[] fdata)
+    {
+        return fdata;
+    }
 }
 
 public class ContentManager
@@ -152,32 +157,29 @@ public class ContentManager
         c.obj.SetActive(true);
     }
 
-    public Content Process(int cid, int type, GameObject prefab, Color c, Vector3 pos, float s, Text mText)
+    public Content Process(int cid, int type, GameObject prefab, Color c, Vector3 pos, float s, DateTime startTime, bool bBase, Text mText)
     {
         try {
+            string method;
             if (CheckContent(cid))
             {
-                var stime = DateTime.UtcNow;
                 UpdateContent(cid, pos);
-                if (mEvalManager.bProcess)
-                {
-                    var timeSpan = DateTime.UtcNow - stime;
-                    string res = "update," + timeSpan.TotalMilliseconds;
-                    mEvalManager.writer_process.WriteLine(res);
-                }
+                method = "VO.MANIPULATE,";
             }
             else
             {
-                //create
-                var stime = DateTime.UtcNow;
                 var newContent = new Content(cid, type, prefab, pos, s, c, mText);
                 RegistContent(cid, newContent);
-                if (mEvalManager.bProcess)
-                {
-                    var timeSpan = DateTime.UtcNow - stime;
-                    string res = "create," + timeSpan.TotalMilliseconds;
-                    mEvalManager.writer_process.WriteLine(res);
-                }
+                method = "VO.CREATE,";
+            }
+            if (mEvalManager.bProcess)
+            {
+                var timeSpan = DateTime.UtcNow - startTime;
+                string edge = "our,resolving,";
+                if (bBase)
+                    edge = "base,resolving,";
+                string res = edge + method + timeSpan.TotalMilliseconds;
+                mEvalManager.mProcessTask.AddMessage(res);
             }
             return ContentDictionary[cid];
         }

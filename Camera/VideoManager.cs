@@ -13,6 +13,7 @@ public class VideoParam
 {
     public bool bRecorded;
     public bool bPlayed;
+    public bool bLoop;
     public bool bShowLog;
     [NonSerialized] public string video_path;
     public string filename;
@@ -43,7 +44,6 @@ public class VideoManager : MonoBehaviour
     string dirPath, filename;
     public ParameterManager mParamManager;
     VideoParam param;
-    ExperimentParam mExParam;
     public ARSession session;
     ArSession subsession;
     
@@ -73,9 +73,11 @@ public class VideoManager : MonoBehaviour
         
     }
 
-    void ChangeColor(Vector4 c)
+    IEnumerator ChangeColor(Vector4 c)
     {
         rawImage.color = c;
+        yield return new WaitForSecondsRealtime(0.1f);
+        rawImage.color = new Vector4(0f, 0f, 0f, 0f);
     }
 
     void Awake()
@@ -100,7 +102,6 @@ public class VideoManager : MonoBehaviour
         var dirPath2 = Application.persistentDataPath + "/data/video";
         try
         {
-            mExParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
             string strAddData = File.ReadAllText(filename);
             param = JsonUtility.FromJson<VideoParam>(strAddData);
             if(param.bPlayed && !param.bRecorded)
@@ -189,10 +190,10 @@ public class VideoManager : MonoBehaviour
                     StartPlayVideo();
                 }
             }
-            if (mExParam.bLocalizationTest && playbackStatus == ArPlaybackStatus.Finished)
+            if (param.bLoop && playbackStatus == ArPlaybackStatus.Finished)
             {
-                ChangeColor(new Vector4(0f, 1f, 1f, 0.3f));
-                //StopPlayVideo();
+                StartCoroutine(ChangeColor(new Vector4(0f, 1f, 1f, 0.3f)));
+                StartPlayVideo();
             }
         }
     }

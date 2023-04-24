@@ -1,7 +1,33 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+
+[Serializable]
+public class EvaluationTask {
+    List<string> messageList;
+    StreamWriter writer;
+    
+    public EvaluationTask(string path)
+    {
+        messageList = new List<string>();
+        writer = new StreamWriter(path, true);
+    }
+    public void AddMessage(string str)
+    {
+        messageList.Add(str);
+    }
+    public void Close()
+    {
+        foreach (string str in messageList)
+        {
+            writer.WriteLine(str);
+        }
+        writer.Close();
+    }
+    //public bool bEvaluation;
+}
 
 public class EvaluationManager : MonoBehaviour
 {
@@ -9,35 +35,53 @@ public class EvaluationManager : MonoBehaviour
     TrackerParam mTrackerParam;
     EvaluationParam mEvalParam;
 
-    public StreamWriter writer_server_localization;
     public bool bServerLocalization;
-    public StreamWriter writer_device_localization;
     public bool bDeviceLocalization;
-    public StreamWriter writer_network_traffic;
-    public bool bTraffic;
-    public StreamWriter writer_latency;
+    public bool bTraffic; // 가상 객체 다운로드 도 추가
     public bool bLatency;
-    public StreamWriter writer_consistency;
     public bool bConsistency;
-    public StreamWriter writer_process;
-    public bool bProcess;
+    public bool bProcess; //리졸빙, 호스팅, 로컬라이제이션 시간 기록, 가상 객체 등록, 가상 객체 갱신 시간 등
+
+    public EvaluationTask mServerLocalizationTask;
+    public EvaluationTask mDeviceLocalizationTask;
+    public EvaluationTask mNetworkTrafficTask;
+    public EvaluationTask mLatencyTask;
+    public EvaluationTask mConsistencyTask;
+    public EvaluationTask mProcessTask;
+
+    //public StreamWriter writer_server_localization;
+    //public StreamWriter writer_device_localization;
+    //public StreamWriter writer_network_traffic;
+    //public StreamWriter writer_latency;
+    //public StreamWriter writer_consistency;
+    //public StreamWriter writer_process;
+
 
     public Dictionary<string, UdpData> DictCommuData;
 
     bool WantsToQuit()
     {
-        if(mEvalParam.bServerLocalization)
-            writer_server_localization.Close();
+        if (mEvalParam.bServerLocalization) {
+            mServerLocalizationTask.Close();
+        }
         if (mEvalParam.bDeviceLocalization)
-            writer_device_localization.Close();
-        if (mEvalParam.bNetworkTraffic)
-            writer_network_traffic.Close();
-        if (mEvalParam.bLatency)
-            writer_latency.Close();
-        if (mEvalParam.bConsistency)
-            writer_consistency.Close();
+        {
+            mDeviceLocalizationTask.Close();
+        }
+        if (mEvalParam.bNetworkTraffic) {
+            mNetworkTrafficTask.Close();
+        }
+        if (mEvalParam.bLatency) {
+            mLatencyTask.Close();
+        }
+        if (mEvalParam.bConsistency) {
+            mConsistencyTask.Close();
+        }
         if (mEvalParam.bProcess)
-            writer_process.Close();
+        {
+            mProcessTask.Close();
+        }
+            
         return true;
     }
 
@@ -62,33 +106,39 @@ public class EvaluationManager : MonoBehaviour
         if (mEvalParam.bServerLocalization)
         {
             filePath = dirPath + "/eval_server_localization.csv";
-            writer_server_localization = new StreamWriter(filePath, true);
+            mServerLocalizationTask = new EvaluationTask(filePath);
+            //writer_server_localization = new StreamWriter(filePath, true);
         }
         if (mEvalParam.bDeviceLocalization)
         {
             filePath = dirPath + "/eval_device_localization.csv";
-            writer_device_localization = new StreamWriter(filePath, true);
+            mDeviceLocalizationTask = new EvaluationTask(filePath);
+            //writer_device_localization = new StreamWriter(filePath, true);
         }
         if (mEvalParam.bNetworkTraffic)
         {
             filePath = dirPath + "/eval_network_traffic.csv";
-            writer_network_traffic = new StreamWriter(filePath, true);
+            mNetworkTrafficTask = new EvaluationTask(filePath);
+            //writer_network_traffic = new StreamWriter(filePath, true);
         }
         if (mEvalParam.bLatency)
         {
             filePath = dirPath + "/eval_latency.csv";
-            writer_latency = new StreamWriter(filePath, true);
+            mLatencyTask = new EvaluationTask(filePath);
+            //writer_latency = new StreamWriter(filePath, true);
             DictCommuData = new Dictionary<string, UdpData>();
         }
         if (mEvalParam.bProcess)
         {
             filePath = dirPath + "/eval_process.csv";
-            writer_process = new StreamWriter(filePath, true);
+            mProcessTask = new EvaluationTask(filePath);
+            //writer_process = new StreamWriter(filePath, true);
         }
         if (mEvalParam.bConsistency)
         {
             filePath = dirPath + "/eval_consistency.csv";
-            writer_consistency = new StreamWriter(filePath, true);
+            mConsistencyTask = new EvaluationTask(filePath);
+            //writer_consistency = new StreamWriter(filePath, true);
         }
         Application.wantsToQuit += WantsToQuit;
     }

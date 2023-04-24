@@ -16,7 +16,6 @@ public class UVRSpatialTest : MonoBehaviour
     public PoseManager mPoseManager;
     public Text mText;
 
-    EvaluationParam mEvalParam;
     ExperimentParam mTestParam;
     TrackerParam mTrackerParam;
     ObjectParam mObjParam;
@@ -87,7 +86,6 @@ public class UVRSpatialTest : MonoBehaviour
         {
             mTestParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
             mTrackerParam = (TrackerParam)mParamManager.DictionaryParam["Tracker"];
-            mEvalParam = (EvaluationParam)mParamManager.DictionaryParam["Evaluation"];
 
             if (!mTestParam.bRegistrationTest || !mTrackerParam.bTracking)
             {
@@ -207,17 +205,17 @@ public class UVRSpatialTest : MonoBehaviour
                     marker.CalculateAziAndEleAndDist(trans.position, out azi, out ele, out dist);
                     float err = marker.Calculate(trans.worldToLocalMatrix, camMatrix, anchorObj.transform.position, marker.corners[0], out temp, false);
 
-                    if (mEvalParam.bConsistency)
+                    if (mEvalManager.bConsistency)
                     {
                         
                         if (mTestParam.bEdgeBase)
                         {
                             string res = "base,"+marker.frameId+",-1,-1," + dist + "," + azi + "," + ele + "," + err + "," + bTrackRes;
-                            mEvalManager.writer_consistency.WriteLine(res);
+                            mEvalManager.mConsistencyTask.AddMessage(res);
                         }
                         else {
                             string res = "our,"+ marker.frameId + "," + mTrackerParam.nJpegQuality + "," + mTrackerParam.nSkipFrames + "," + dist + "," + azi + "," + ele + "," + err + "," + bTrackRes;
-                            mEvalManager.writer_consistency.WriteLine(res);
+                            mEvalManager.mConsistencyTask.AddMessage(res);
                         }
                     }
 

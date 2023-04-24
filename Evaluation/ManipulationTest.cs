@@ -2,6 +2,7 @@ using OpenCVForUnity.CoreModule;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,6 +12,7 @@ public class ManipulationTest : MonoBehaviour
     public DataCommunicator mSender;
     public ParameterManager mParamManager;
     public PlaneManager mPlaneManager;
+    public EvaluationManager mEvalManager;
     public Text mText;
     public GameObject prefabObj;
 
@@ -94,6 +96,7 @@ public class ManipulationTest : MonoBehaviour
         rawImage.color = new Vector4(0f, 0f, 0f, 0f);
     }
 
+    DateTime startTime;
     int touchID = 0;
     GameObject touchObject = null;
     void Update()
@@ -103,7 +106,7 @@ public class ManipulationTest : MonoBehaviour
         if (nTouchCount == 1)
         {
             try {
-                
+                startTime = DateTime.UtcNow;
                 touchID++;
                 Touch touch = Input.GetTouch(0);
                 var phase = touch.phase;
@@ -141,14 +144,7 @@ public class ManipulationTest : MonoBehaviour
                     var rot = Quaternion.LookRotation(p.normal);
                     rot.ToAngleAxis(out angle, out axis);
                     axis = angle * axis;
-
-                    float[] fdata = new float[5];
                     Vector3 newPos = ray.origin + ray.direction * dist;
-                    //fdata[0] = x;
-                    //fdata[1] = y;
-                    fdata[2] = newPos.x;
-                    fdata[3] = newPos.y;
-                    fdata[4] = newPos.z;
 
                     string keyword = "";
                     int sendID = 0;
@@ -177,10 +173,31 @@ public class ManipulationTest : MonoBehaviour
                         //Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length); //전체 실수형 데이터 수
 
                         //자기 자신 포함 : length+id+type +3xvector3+scale
-                        byte[] bdata2 = ContentData.Generate(13f, sendID, (float)ContentType.Object,newPos.x, newPos.y, newPos.z, axis.x, axis.y, axis.z, mObjParam.objColor.r, mObjParam.objColor.g, mObjParam.objColor.b, mObjParam.fTempObjScale);
-                        UdpData mdata = new UdpData(keyword, mSystemManager.User.UserName, sendID, bdata2, 1.0);
-                        StartCoroutine(mSender.SendData(mdata));
+                        //byte[] bdata2 = ContentData.Generate(13f, sendID, (float)ContentType.Object,newPos.x, newPos.y, newPos.z, axis.x, axis.y, axis.z, mObjParam.objColor.r, mObjParam.objColor.g, mObjParam.objColor.b, mObjParam.fTempObjScale);
+                        //UdpData mdata = new UdpData(keyword, mSystemManager.User.UserName, sendID, bdata2, 1.0);
+                        //StartCoroutine(mSender.SendData(mdata));
 
+                        byte[] bdata = ContentData.Generate(13f, sendID, (float)ContentType.Object, newPos.x, newPos.y, newPos.z, axis.x, axis.y, axis.z, mObjParam.objColor.r, mObjParam.objColor.g, mObjParam.objColor.b, mObjParam.fTempObjScale);
+                        GCHandle handle = GCHandle.Alloc(bdata, GCHandleType.Pinned);
+                        IntPtr addr = handle.AddrOfPinnedObject();
+                        UdpData idata = new UdpData(keyword, mSystemManager.User.UserName, sendID, addr, bdata.Length, 0f);
+                        mSender.SendDataWithNDK(idata);
+                        handle.Free();
+                        if (mEvalManager.bProcess)
+                        {
+                            var timeSpan2 = DateTime.UtcNow - startTime;
+                            string res = "";
+                            if (mTestParam.bEdgeBase)
+                            {
+                                res = "base,Hosting,"+keyword+",";
+                            }
+                            else
+                            {
+                                res = "our,Hosting," + keyword + ",";
+                            }
+                            res+=timeSpan2.TotalMilliseconds;
+                            mEvalManager.mProcessTask.AddMessage(res);
+                        }
                     }
                     if (phase == TouchPhase.Ended)
                     {

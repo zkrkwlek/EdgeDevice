@@ -78,7 +78,6 @@ public class Tracker : MonoBehaviour
     string dirPath, filename;
     TrackerParam mTrackParam;
     ExperimentParam mExParam;
-    EvaluationParam mEvalParam;
     bool bNotBase;
 
     float[] poseData;
@@ -131,7 +130,6 @@ public class Tracker : MonoBehaviour
 
         mTrackParam = (TrackerParam)mParamManager.DictionaryParam["Tracker"];
         mExParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
-        mEvalParam = (EvaluationParam)mParamManager.DictionaryParam["Evaluation"];
         bNotBase = !mExParam.bEdgeBase;
         mbSuccessInit = false;
 
@@ -190,7 +188,7 @@ public class Tracker : MonoBehaviour
             {
                 mbSuccessInit = true;
             }
-            if (mEvalParam.bServerLocalization)
+            if (mEvalManager.bServerLocalization)
             {
                 string res;
                 if (mExParam.bEdgeBase)
@@ -200,7 +198,7 @@ public class Tracker : MonoBehaviour
                 else {
                     res = "our," + id + "," + mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + "," + bRes;
                 }
-                mEvalManager.writer_server_localization.WriteLine(res);
+                mEvalManager.mServerLocalizationTask.AddMessage(res);
             }
             
         }
@@ -249,8 +247,17 @@ public class Tracker : MonoBehaviour
                 if (mEvalManager.bProcess)
                 {
                     var timeSpan2 = DateTime.UtcNow - sTime;
-                    string res = "localization," + timeSpan2.TotalMilliseconds;
-                    mEvalManager.writer_process.WriteLine(res);
+                    string res = "";
+                    if (mExParam.bEdgeBase)
+                    {
+                        res = "base,localization";
+                    }
+                    else
+                    {
+                        res = "our,localization";
+                    }
+                    res +=timeSpan2.TotalMilliseconds;
+                    mEvalManager.mProcessTask.AddMessage(res);
                 }
                 if (mExParam.bEdgeBase)
                 {
@@ -288,18 +295,17 @@ public class Tracker : MonoBehaviour
             }
             else {
                 mPoseManager.AddPose(frameID, Camera.main.transform, bSuccessTracking);
-                if (mEvalParam.bDeviceLocalization && mbSuccessInit)
+                if (mEvalManager.bDeviceLocalization && mbSuccessInit)
                 {
                     if (mExParam.bEdgeBase)
                     {
                         string res = "base,"+frameID + ",-1,-1,"+bSuccessTracking;
-                        mEvalManager.writer_device_localization.WriteLine(res);
+                        mEvalManager.mDeviceLocalizationTask.AddMessage(res);
                     }
                     else {
                         string res = "our,"+frameID + "," + mTrackParam.nJpegQuality + "," + mTrackParam.nSkipFrames + "," + bSuccessTracking;
-                        mEvalManager.writer_device_localization.WriteLine(res);
+                        mEvalManager.mDeviceLocalizationTask.AddMessage(res);
                     }
-                    
                 }
             }
             //if (mTrackParam.bShowLog) { 

@@ -16,7 +16,6 @@ public class ContentProcessor : MonoBehaviour
     public PlaneManager mPlaneManager;
     public VOFrameManager mVOFrameManager;
     ObjectParam mObjParam;
-    ExperimentParam mExParam;
     DrawPaintParam mDrawParam;
 
     ContentManager mContentManager;
@@ -26,9 +25,7 @@ public class ContentProcessor : MonoBehaviour
     void Awake()
     {
         mObjParam = (ObjectParam)mParamManager.DictionaryParam["VirtualObject"];
-        mExParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
         mDrawParam = (DrawPaintParam)mParamManager.DictionaryParam["DrawPaint"];
-
         mContentManager = new ContentManager(mEvalManager,tempObjPrefab,pathObjPrefab);
         //mPathManager = new PathContentManager();
         //mDrawManager = new DrawContentManager();
@@ -39,7 +36,7 @@ public class ContentProcessor : MonoBehaviour
         
     }
 
-    public Content Process(ref float[] fdata, int idx, Text mText)
+    public Content Process(ref float[] fdata, int idx, DateTime startTime, bool _b, Text mText)
     {
         try
         {
@@ -53,7 +50,7 @@ public class ContentProcessor : MonoBehaviour
                 Vector3 rot = new Vector3(fdata[idx++], fdata[idx++], fdata[idx++]);
                 Color c = new Color(fdata[idx++], fdata[idx++], fdata[idx++]);
                 float scale = fdata[idx];
-                return mContentManager.Process(id, type, tempObjPrefab, c, pos, scale, mText);
+                return mContentManager.Process(id, type, tempObjPrefab, c, pos, scale, startTime, _b, mText);
             }
             if ((ContentType)type == ContentType.Draw)
             {
@@ -109,7 +106,7 @@ public class ContentProcessor : MonoBehaviour
         mContentManager.Move(id);
     }
 
-    public void UpdateVirtualFrame(int fid, float[] fdata)
+    public void UpdateVirtualFrame(int fid, float[] fdata, DateTime startTime, bool _b)
     {
 
         try {
@@ -117,78 +114,16 @@ public class ContentProcessor : MonoBehaviour
             var newVF = mVOFrameManager.GetFrame(fid);
 
             Color color = Color.white;
-
             int N = (int)fdata[0];
             int idx = 1;
             //mText.text = "update object start~~ " + N;
             for (int j = 0; j < N; j++)
             {
                 int len = (int)fdata[idx];
-                var seg = new ArraySegment<float>(fdata, idx, len);
-                //mText.text = "object test ===" + idx + " " + len + seg.Count;
                 Content content = null;
-                content = Process(ref fdata, idx, mText);
+                content = Process(ref fdata, idx, startTime, _b, mText);
                 idx += len;
 
-                //int id = (int)fdata[idx];
-                //int mid = (int)fdata[idx + 1];
-                //int type = (int)fdata[idx + 2];
-                //float x = fdata[idx + 3];
-                //float y = fdata[idx + 4];
-                //float z = fdata[idx + 5];
-                //float ex = fdata[idx + 6];
-                //float ey = fdata[idx + 7];
-                //float ez = fdata[idx + 8];
-                //idx += 9;
-                //Content content = null;
-                //if (type == 2)
-                //{
-                //    if (mPlaneManager.CheckPlane(mid))
-                //    {
-                //        var plane = mPlaneManager.GetPlane(mid);
-                //        var normal = plane.plane.normal * -1f;
-                //        Color c = Color.blue;
-                //        if(mid == 0)
-                //        {
-                //            c = Color.red;
-                //        }else if(mid == 1)
-                //        {
-                //            c = Color.green;
-                //        }
-
-                //        content = mDrawManager.Process(id, type, x, y, z, ex, ey, ez, normal, c, mText);
-                //        //mText.text = mid + " ";
-                //        //content = mDrawManager.Process(id, type, x, y, z, ex, ey, ez, mText);
-                //    }
-                //    else
-                //    {
-                //        content = mDrawManager.Process(id, type, x, y, z, ex, ey, ez, mText);
-                //    }
-
-                //}
-                //else if (type == 1)
-                //{
-                //    content = mPathManager.Process(id, type, pathObjPrefab, x, y, z, ex, ey, ez, mObjParam.fWalkingObjScale, mText);
-                //}
-                //else
-                //{
-                //    if (mExParam.bManipulationTest)
-                //    {
-                //        if(id % 3 == 0)
-                //        {
-                //            color = Color.red;
-                //        }
-                //        if (id % 3 == 1)
-                //        {
-                //            color = Color.green;
-                //        }
-                //        if (id % 3 == 2)
-                //        {
-                //            color = Color.blue;
-                //        }
-                //    }
-                //    content = mContentManager.Process(id, type, tempObjPrefab, color, x, y, z, mObjParam.fTempObjScale, mText);
-                //}
                 if (content != null)
                 {
                     //여기에 제대로 들어가는가?
