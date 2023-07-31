@@ -106,10 +106,10 @@ public class ContentData
 {
     static public byte[] Generate(params float[] fdata)
     {
-        //byte[] bdata = new byte[fdata.Length * 4];
-        //Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length);
-        byte[] bdata = new byte[5000];
-        Buffer.BlockCopy(fdata, 0, bdata, 0, fdata.Length*4);
+        byte[] bdata = new byte[fdata.Length * 4];
+        Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length);
+        //byte[] bdata = new byte[5000];
+        //Buffer.BlockCopy(fdata, 0, bdata, 0, fdata.Length*4);
         return bdata;
     }
     static public float[] GenerateFloatArray(params float[] fdata)

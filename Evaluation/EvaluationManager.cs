@@ -20,6 +20,9 @@ public class EvaluationTask {
     }
     public void Close()
     {
+        int last = messageList.Count - 1;
+        messageList[0] += ",Start";
+        messageList[last] += ",End";
         foreach (string str in messageList)
         {
             writer.WriteLine(str);

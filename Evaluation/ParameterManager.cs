@@ -61,6 +61,7 @@ class ExperimentParam : Param
     public bool bPathTest;
     public bool bDrawTest;
     public bool bObjectDetection;
+    public bool bOXRTest;
 }
 
 [Serializable]

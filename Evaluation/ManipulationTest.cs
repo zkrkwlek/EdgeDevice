@@ -173,16 +173,16 @@ public class ManipulationTest : MonoBehaviour
                         //Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length); //전체 실수형 데이터 수
 
                         //자기 자신 포함 : length+id+type +3xvector3+scale
-                        //byte[] bdata2 = ContentData.Generate(13f, sendID, (float)ContentType.Object,newPos.x, newPos.y, newPos.z, axis.x, axis.y, axis.z, mObjParam.objColor.r, mObjParam.objColor.g, mObjParam.objColor.b, mObjParam.fTempObjScale);
-                        //UdpData mdata = new UdpData(keyword, mSystemManager.User.UserName, sendID, bdata2, 1.0);
-                        //StartCoroutine(mSender.SendData(mdata));
+                        byte[] bdata2 = ContentData.Generate(13f, sendID, (float)ContentType.Object,newPos.x, newPos.y, newPos.z, axis.x, axis.y, axis.z, mObjParam.objColor.r, mObjParam.objColor.g, mObjParam.objColor.b, mObjParam.fTempObjScale);
+                        UdpData mdata = new UdpData(keyword, mSystemManager.User.UserName, sendID, bdata2, 1.0);
+                        StartCoroutine(mSender.SendData(mdata));
 
-                        byte[] bdata = ContentData.Generate(13f, sendID, (float)ContentType.Object, newPos.x, newPos.y, newPos.z, axis.x, axis.y, axis.z, mObjParam.objColor.r, mObjParam.objColor.g, mObjParam.objColor.b, mObjParam.fTempObjScale);
-                        GCHandle handle = GCHandle.Alloc(bdata, GCHandleType.Pinned);
-                        IntPtr addr = handle.AddrOfPinnedObject();
-                        UdpData idata = new UdpData(keyword, mSystemManager.User.UserName, sendID, addr, bdata.Length, 0f);
-                        mSender.SendDataWithNDK(idata);
-                        handle.Free();
+                        //byte[] bdata = ContentData.Generate(13f, sendID, (float)ContentType.Object, newPos.x, newPos.y, newPos.z, axis.x, axis.y, axis.z, mObjParam.objColor.r, mObjParam.objColor.g, mObjParam.objColor.b, mObjParam.fTempObjScale);
+                        //GCHandle handle = GCHandle.Alloc(bdata, GCHandleType.Pinned);
+                        //IntPtr addr = handle.AddrOfPinnedObject();
+                        //UdpData idata = new UdpData(keyword, mSystemManager.User.UserName, sendID, addr, bdata.Length, 0f);
+                        //StartCoroutine(mSender.SendDataWithNDK(idata));
+                        //handle.Free();
                         if (mEvalManager.bProcess)
                         {
                             var timeSpan2 = DateTime.UtcNow - startTime;

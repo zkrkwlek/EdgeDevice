@@ -54,6 +54,10 @@ public class ExperimentSetup : MonoBehaviour
                 sKeywords += ",ReqUpdateLocalMap";
                 rKeywords += ",UpdatedLocalMap,single";
             }
+            if (param.bOXRTest)
+            {
+                sKeywords += ",OXR::IMAGE";
+            }
         }
         catch(Exception e)
         {

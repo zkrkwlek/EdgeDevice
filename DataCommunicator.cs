@@ -12,18 +12,14 @@ public class DataCommunicator : MonoBehaviour
 {
 #if (UNITY_EDITOR_WIN)
     [DllImport("edgeslam")]
-    private static extern IntPtr DownloadData(int id, char[] keyword, int len1, char[] src, int len2, ref int N, ref float t);
-    [DllImport("edgeslam")]
-    private static extern void ReleaseDownloadData(int id, char[] ckey, int ckeylen);
+    private static extern void DownloadData(int id, char[] keyword, int len1, char[] src, int len2, IntPtr addr, ref int N, ref float t);
     [DllImport("UnityLibrary")]
     private static extern float UploadData(IntPtr data, int len, int id, char[] keyword, int len1, char[] src, int len2, double ts);
 #elif UNITY_ANDROID
     [DllImport("edgeslam")]
     private static extern float UploadData(IntPtr data, int len, int id, char[] keyword, int len1, char[] src, int len2, double ts);
     [DllImport("edgeslam")]
-    private static extern IntPtr DownloadData(int id, char[] keyword, int len1, char[] src, int len2, ref int N, ref float t);
-    [DllImport("edgeslam")]
-    private static extern void ReleaseDownloadData(int id, char[] ckey, int ckeylen);
+    private static extern void DownloadData(int id, char[] keyword, int len1, char[] src, int len2, IntPtr addr, ref int N, ref float t);
 #endif
 
     public Text mText;
@@ -41,7 +37,7 @@ public class DataCommunicator : MonoBehaviour
     public EvaluationManager mEvalManager;
 
     ///NDK로 전송하는 데이터 코드
-    public void SendDataWithNDK(UdpData data)
+    public IEnumerator SendDataWithNDK(UdpData data)
     {
         data.sendedTime = DateTime.UtcNow;
         var t = UploadData(data.addr, data.length, data.id, data.keyword.ToCharArray(), data.keyword.Length, data.src.ToCharArray(), data.src.Length, data.ts);
@@ -53,6 +49,7 @@ public class DataCommunicator : MonoBehaviour
             string res = data.keyword + ",upload," + data.id + "," + mTrackParam.nJpegQuality + "," + data.length + "," + t;
             mEvalManager.mLatencyTask.AddMessage(res);
         }
+        yield return null;
     }
 
     public IEnumerator SendData(UdpData data)
@@ -159,7 +156,7 @@ public class DataCommunicator : MonoBehaviour
             string msg = System.Text.Encoding.Default.GetString(e.bdata);
             UdpData data = JsonUtility.FromJson<UdpData>(msg);
             StartCoroutine(MessageParsing(data));
-            //MessageParsingWithNDK(data);
+            //StartCoroutine(MessageParsingWithNDK(data));
         }
         catch(Exception ex)
         {
@@ -177,7 +174,6 @@ public class DataCommunicator : MonoBehaviour
     const int nSizeServerMP = nMapPointInfo + 32; // 3d x y z + desc // info + desc
     IEnumerator MessageParsing(UdpData data) {
         data.receivedTime = DateTime.UtcNow;
-        mText.text = "received = " + data.length;
         if (data.keyword == "ReferenceFrame")
         {
             UnityWebRequest req1;
@@ -187,25 +183,8 @@ public class DataCommunicator : MonoBehaviour
             //1~12까지가 포즈 정보임.
             if (req1.result == UnityWebRequest.Result.Success)
             {
-                if (mEvalManager.bLatency && !mExParam.bEdgeBase)
-                {
-                    var time = DateTime.UtcNow;
-                    var timeSpan = time - data.receivedTime;
-                    double ts = timeSpan.TotalMilliseconds;
-
-                    string newkey = "Image" + data.id;
-                    if (mEvalManager.DictCommuData.ContainsKey(newkey))
-                    {
-                        var prevData =mEvalManager.DictCommuData[newkey];
-                        var latencySpan = data.receivedTime - prevData.sendedTime;
-                        double latency = latencySpan.TotalMilliseconds;
-                        string res_latency = "localization,latency," + data.id + "," + mTrackParam.nJpegQuality + "," + req1.downloadHandler.data.Length + "," + latency;
-                        mEvalManager.mLatencyTask.AddMessage(res_latency);
-                    }
-                    string res = "reference frame,download," + data.id + "," + mTrackParam.nJpegQuality + "," + req1.downloadHandler.data.Length + "," + ts;
-                    mEvalManager.mLatencyTask.AddMessage(res);
-                }
-
+                var recivedTime = DateTime.UtcNow;
+                
                 ////
                 if (!mSystemManager.mbInit)
                 {
@@ -225,6 +204,31 @@ public class DataCommunicator : MonoBehaviour
                     IntPtr ptr = handle.AddrOfPinnedObject();
                     mTracker.CreateKeyFrame(data.id, ptr);
                     handle.Free();
+
+                    //update까지 끝
+                    var processedTime = DateTime.UtcNow;
+
+                    if (mEvalManager.bLatency && !mExParam.bEdgeBase)
+                    {
+                        string newkey = "Image" + data.id;
+                        if (mEvalManager.DictCommuData.ContainsKey(newkey))
+                        {
+                            var prevData = mEvalManager.DictCommuData[newkey];
+                            var latencySpan = data.receivedTime - prevData.sendedTime;
+                            double latency = latencySpan.TotalMilliseconds;
+                            string res_latency = "localization,latency," + data.id + "," + mTrackParam.nJpegQuality + "," + req1.downloadHandler.data.Length + "," + latency;
+                            mEvalManager.mLatencyTask.AddMessage(res_latency);
+
+                            var latencySpan2 = processedTime - prevData.sendedTime;
+                            double latency2 = latencySpan2.TotalMilliseconds;
+                            string res_latency2 = "updatemap,latency," + data.id + "," + mTrackParam.nJpegQuality + "," + req1.downloadHandler.data.Length + "," + latency2;
+                            mEvalManager.mLatencyTask.AddMessage(res_latency2);
+                        }
+                        var timeSpan1 = recivedTime - data.receivedTime;
+                        double ts1 = timeSpan1.TotalMilliseconds;
+                        string res = "reference frame,download," + data.id + "," + mTrackParam.nJpegQuality + "," + req1.downloadHandler.data.Length + "," + ts1;
+                        mEvalManager.mLatencyTask.AddMessage(res);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -242,38 +246,43 @@ public class DataCommunicator : MonoBehaviour
             //1~12까지가 포즈 정보임.
             if (req1.result == UnityWebRequest.Result.Success)
             {
-                if (mEvalManager.bLatency && mExParam.bEdgeBase)
-                {
-                    var time = DateTime.UtcNow;
-                    var timeSpan = time - data.receivedTime;
-                    double ts = timeSpan.TotalMilliseconds;
-                    string res = "base local map,download," + data.id + ",-1," + req1.downloadHandler.data.Length +","+ ts;
-                    mEvalManager.mLatencyTask.AddMessage(res);
-                }
-                string newkey = "Image" + data.id;
-                if (mEvalManager.DictCommuData.ContainsKey(newkey))
-                {
-                    var prevData = mEvalManager.DictCommuData[newkey];
-                    var latencySpan = data.receivedTime - prevData.sendedTime;
-                    double latency = latencySpan.TotalMilliseconds;
-                    string res_latency = "localization2,latency," + data.id + "," + mTrackParam.nJpegQuality + "," + req1.downloadHandler.data.Length + "," + latency;
-                    mEvalManager.mLatencyTask.AddMessage(res_latency);
-                }
-
-
-                //float[] fdata = new float[req1.downloadHandler.data.Length / 4];
-                //Buffer.BlockCopy(req1.downloadHandler.data, 0, fdata, 0, req1.downloadHandler.data.Length);
+                
                 int n = req1.downloadHandler.data.Length / nSizeServerMP;
                 try
                 {
                     GCHandle handle = GCHandle.Alloc(req1.downloadHandler.data, GCHandleType.Pinned);
                     IntPtr ptr = handle.AddrOfPinnedObject();
                     mTracker.UpdateData(data.id, n, ptr);
+                    var processedTime = DateTime.UtcNow;
+                    string newkey = "Image" + data.id;
+                    if (mEvalManager.DictCommuData.ContainsKey(newkey))
+                    {
+                        var prevData = mEvalManager.DictCommuData[newkey];
+                        var latencySpan = data.receivedTime - prevData.sendedTime;
+                        double latency = latencySpan.TotalMilliseconds;
+                        string res_latency = "localization2,latency," + data.id + "," + mTrackParam.nJpegQuality + "," + req1.downloadHandler.data.Length + "," + latency;
+                        mEvalManager.mLatencyTask.AddMessage(res_latency);
+
+                        var latencySpan2 = processedTime - prevData.sendedTime;
+                        double latency2 = latencySpan2.TotalMilliseconds;
+                        string res_latency2 = "BaseLocalMapUpdate,latency," + data.id + "," + mTrackParam.nJpegQuality + "," + req1.downloadHandler.data.Length + "," + latency2;
+                        mEvalManager.mLatencyTask.AddMessage(res_latency2);
+                    }
+
                     handle.Free();
                 }
                 catch (Exception e)
                 {
                     mText.text = "Update Local Map Error = " + e.ToString();
+                }
+
+                if (mEvalManager.bLatency && mExParam.bEdgeBase)
+                {
+                    var time = DateTime.UtcNow;
+                    var timeSpan = time - data.receivedTime;
+                    double ts = timeSpan.TotalMilliseconds;
+                    string res = "base local map,download," + data.id + ",-1," + req1.downloadHandler.data.Length + "," + ts;
+                    mEvalManager.mLatencyTask.AddMessage(res);
                 }
 
             }
@@ -354,7 +363,7 @@ public class DataCommunicator : MonoBehaviour
             {
                 float[] fdata = new float[req1.downloadHandler.data.Length / 4];
                 Buffer.BlockCopy(req1.downloadHandler.data, 0, fdata, 0, req1.downloadHandler.data.Length);
-                mContentManager.UpdateVirtualFrame(data.id,fdata, data.receivedTime, mExParam.bEdgeBase);
+                mContentManager.UpdateVirtualFrame(data.id,ref fdata, data.receivedTime, mExParam.bEdgeBase);
             }
         }
         if (data.keyword == "VO.MARKER.CREATED") //나중에 키워드 변경
@@ -441,22 +450,17 @@ public class DataCommunicator : MonoBehaviour
         
         yield break;
     }
-    void MessageParsingWithNDK(UdpData data)
+    IEnumerator MessageParsingWithNDK(UdpData data)
     {
         float t = 0f;
         int N = 0;
-        var addr = DownloadData(data.id, data.keyword.ToCharArray(), data.keyword.Length, data.src.ToCharArray(), data.src.Length, ref N, ref t);
-        //GCHandle dataHandle = GCHandle.Alloc(addr, GCHandleType.Pinned);
-        //float[] fdata = (float[])dataHandle.Target;
-        
-        float[] fdata = new float[N];
-        Marshal.Copy(addr, fdata, 0, N);
+        int len = data.length;
 
-        //float[] fdata = new float[5000];
-        //GCHandle handle = GCHandle.Alloc(fdata, GCHandleType.Pinned);
-        //IntPtr ptr = handle.AddrOfPinnedObject();
-        //DownloadData(data.id, data.keyword.ToCharArray(), data.keyword.Length, data.src.ToCharArray(), data.src.Length, ptr, 5000, ref N, ref t);
-
+        float[] fdata = new float[len/4];
+        GCHandle handle = GCHandle.Alloc(fdata, GCHandleType.Pinned);
+        IntPtr addr = handle.AddrOfPinnedObject();
+        DownloadData(data.id, data.keyword.ToCharArray(), data.keyword.Length, data.src.ToCharArray(), data.src.Length, addr, ref N, ref t);
+        mText.text = fdata.Length + " " + N;
         if (data.keyword == "ReferenceFrame")
         {
             try
@@ -475,8 +479,14 @@ public class DataCommunicator : MonoBehaviour
             }
             //yield return null;
         }
-        ReleaseDownloadData(data.id, data.keyword.ToCharArray(), data.keyword.Length);
-        //dataHandle.Free();
-        //yield return null;
+        if (data.keyword == "LocalContent") //나중에 키워드 변경
+        {
+            //float[] fdata = new float[req1.downloadHandler.data.Length / 4];
+            //Buffer.BlockCopy(req1.downloadHandler.data, 0, fdata, 0, req1.downloadHandler.data.Length);
+            mContentManager.UpdateVirtualFrame(data.id, ref fdata, data.receivedTime, mExParam.bEdgeBase);
+        }
+
+        handle.Free();
+        yield return null;
     }
 }

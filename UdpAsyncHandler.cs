@@ -27,12 +27,21 @@ public class UdpData
         src = _src;
     }
     ///데이터 저장용
-    public UdpData(string _key, string _src, int _id, double _ts)
+    //public UdpData(string _key, string _src, int _id, double _ts)
+    //{
+    //    keyword = _key;
+    //    src = _src;
+    //    id = _id;
+    //    ts = _ts;
+    //}
+    //서버에서 데이터 저장용
+    public UdpData(string _key, string _src, int _id, int _length, double _ts)
     {
         keyword = _key;
         src = _src;
         id = _id;
         ts = _ts;
+        length = _length;
     }
     public UdpData(string _key, string _src, int _id, byte[] _data, double _ts)
     {
@@ -57,7 +66,7 @@ public class UdpData
     public double ts;
     public DateTime sendedTime, receivedTime;
     public IntPtr addr;
-    public int length;
+    public int length; //바이트의 길이
 }
 
 public class UdpAsyncHandler

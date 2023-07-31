@@ -106,7 +106,7 @@ public class ContentProcessor : MonoBehaviour
         mContentManager.Move(id);
     }
 
-    public void UpdateVirtualFrame(int fid, float[] fdata, DateTime startTime, bool _b)
+    public void UpdateVirtualFrame(int fid, ref float[] fdata, DateTime startTime, bool _b)
     {
 
         try {
