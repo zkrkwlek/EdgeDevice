@@ -103,9 +103,12 @@ public class TestManager : MonoBehaviour
                 //이미지 압축
                 Imgcodecs.imencode(".jpg", e.rgbMat.clone(), data, param);//jpg
                 //NDK로 전송
-                IntPtr addr = (IntPtr)data.dataAddr();
-                UdpData idata = new UdpData("Image", mSystemManager.User.UserName, frameID, addr, data.rows(), 0f);
-                StartCoroutine(mSender.SendDataWithNDK(idata));
+                //IntPtr addr = (IntPtr)data.dataAddr();
+                //UdpData idata = new UdpData("Image", mSystemManager.User.UserName, frameID, addr, data.rows(), 0f);
+                //StartCoroutine(mSender.SendDataWithNDK(idata));
+                byte[] bImgData = data.toArray();
+                UdpData idata = new UdpData("Image", mSystemManager.User.UserName, frameID, bImgData, 0f);
+                StartCoroutine(mSender.SendData(idata));
                 bSendImage = false;
 
                 //여기서 이미지를 저장하는게 나을지도 모름.

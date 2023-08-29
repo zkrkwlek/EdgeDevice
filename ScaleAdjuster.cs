@@ -129,27 +129,28 @@ public class ScaleAdjuster : MonoBehaviour
             int fid = eventArgs.fid;
 
             Mat R = new Mat(3, 3, CvType.CV_32FC1);
-            R.put(0, 0, eventArgs.fdata[1]);
-            R.put(0, 1, eventArgs.fdata[2]);
-            R.put(0, 2, eventArgs.fdata[3]);
+            int nidx = 2;
+            R.put(0, 0, eventArgs.fdata[nidx++]);
+            R.put(0, 1, eventArgs.fdata[nidx++]);
+            R.put(0, 2, eventArgs.fdata[nidx++]);
 
-            R.put(1, 0, eventArgs.fdata[4]);
-            R.put(1, 1, eventArgs.fdata[5]);
-            R.put(1, 2, eventArgs.fdata[6]);
+            R.put(1, 0, eventArgs.fdata[nidx++]);
+            R.put(1, 1, eventArgs.fdata[nidx++]);
+            R.put(1, 2, eventArgs.fdata[nidx++]);
 
-            R.put(2, 0, eventArgs.fdata[7]);
-            R.put(2, 1, eventArgs.fdata[8]);
-            R.put(2, 2, eventArgs.fdata[9]);
+            R.put(2, 0, eventArgs.fdata[nidx++]);
+            R.put(2, 1, eventArgs.fdata[nidx++]);
+            R.put(2, 2, eventArgs.fdata[nidx++]);
 
             Mat t = new Mat(3, 1, CvType.CV_32FC1);
-            t.put(0, 0, eventArgs.fdata[10]);
-            t.put(1, 0, eventArgs.fdata[11]);
-            t.put(2, 0, eventArgs.fdata[12]);
+            t.put(0, 0, eventArgs.fdata[nidx++]);
+            t.put(1, 0, eventArgs.fdata[nidx++]);
+            t.put(2, 0, eventArgs.fdata[nidx++]);
 
             R = invertYMat * R * invertYMat;
             t = invertYMat * t;
             
-            int dataIdx = 13;
+            int dataIdx = 14;
             for (int i = 0; i < N; i++)
             {
                 dataIdx += 6;

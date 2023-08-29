@@ -103,7 +103,7 @@ public class PointCloudProcess : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
         
     }
@@ -120,6 +120,33 @@ public class PointCloudProcess : MonoBehaviour
             PointCloudReceivedEvent.pointCloudReceived -= OnPointCloudReceived;
     }
 
+    public void GetWorldPoints(Vector3[] array, float[] pose)
+    {
+        Matrix3x3 R = new Matrix3x3(
+                    pose[0], pose[1], pose[2],
+                    pose[3], pose[4], pose[5],
+                    pose[6], pose[7], pose[8]
+                );
+        Vector3 t = new Vector3(pose[9], pose[10], pose[11]);
+        Matrix4x4 ARM = invertYMatrix * Matrix4x4.TRS(t, R.GetQuaternion(), Vector3.one) * invertYMatrix;
+
+        ParticleSystem.Particle[] m_ObjParticles = new ParticleSystem.Particle[array.Length];
+        var size = m_ParticleSystem.main.startSize.constant;
+        for (int i = 0; i < array.Length; i++) {
+            var T = Camera.main.transform.localToWorldMatrix * ARM;
+            Vector3 pt = array[i];
+            pt.y *= -1f;
+            m_ObjParticles[i].position = T.MultiplyPoint(pt);
+            m_ObjParticles[i].size = size;
+            m_ObjParticles[i].color = Color.yellow;
+        }
+
+        List<ParticleSystem.Particle> ListParticles = new List<ParticleSystem.Particle>(m_ObjParticles.Length + m_Particles.Length);
+        ListParticles.AddRange(m_ObjParticles);
+        ListParticles.AddRange(m_Particles);
+        m_ParticleSystem.SetParticles(ListParticles.ToArray(), ListParticles.Count);
+    }
+
     int m_NumParticles;
     ParticleSystem.Particle[] m_Particles;
     Matrix4x4 invertYMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(1, -1, 1));
@@ -133,18 +160,19 @@ public class PointCloudProcess : MonoBehaviour
             Matrix4x4 ARM = Matrix4x4.identity;
             if (!bTracking)
             {
+                int nTempPoseIdx = 2;
                 Matrix3x3 R = new Matrix3x3(
-                    eventArgs.fdata[1], eventArgs.fdata[2], eventArgs.fdata[3],
-                    eventArgs.fdata[4], eventArgs.fdata[5], eventArgs.fdata[6],
-                    eventArgs.fdata[7], eventArgs.fdata[8], eventArgs.fdata[9]
+                    eventArgs.fdata[2], eventArgs.fdata[3], eventArgs.fdata[4],
+                    eventArgs.fdata[5], eventArgs.fdata[6], eventArgs.fdata[7],
+                    eventArgs.fdata[8], eventArgs.fdata[9], eventArgs.fdata[10]
                 );
                 PoseData data = new PoseData();
                 data.rot = R.GetQuaternion();
-                data.pos = new Vector3(eventArgs.fdata[10], eventArgs.fdata[11], eventArgs.fdata[12]);
+                data.pos = new Vector3(eventArgs.fdata[11], eventArgs.fdata[12], eventArgs.fdata[13]);
                 ARM = invertYMatrix * Matrix4x4.TRS(data.pos, data.rot, Vector3.one) * invertYMatrix;
             }
 
-            int dataIdx = 13;
+            int dataIdx = 14;
 
             int numParticles = N;
             if (m_Particles == null || m_Particles.Length < numParticles) { 

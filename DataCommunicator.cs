@@ -15,11 +15,19 @@ public class DataCommunicator : MonoBehaviour
     private static extern void DownloadData(int id, char[] keyword, int len1, char[] src, int len2, IntPtr addr, ref int N, ref float t);
     [DllImport("UnityLibrary")]
     private static extern float UploadData(IntPtr data, int len, int id, char[] keyword, int len1, char[] src, int len2, double ts);
+    [DllImport("edgeslam")]
+    private static extern int CreateDynamicObjectFrame(int id, IntPtr data, int sidx);
+    [DllImport("edgeslam")]
+    private static extern int EraseImage(int id);
 #elif UNITY_ANDROID
     [DllImport("edgeslam")]
     private static extern float UploadData(IntPtr data, int len, int id, char[] keyword, int len1, char[] src, int len2, double ts);
     [DllImport("edgeslam")]
     private static extern void DownloadData(int id, char[] keyword, int len1, char[] src, int len2, IntPtr addr, ref int N, ref float t);
+    [DllImport("edgeslam")]
+    private static extern int CreateDynamicObjectFrame(int id, IntPtr data, int sidx);
+    [DllImport("edgeslam")]
+    private static extern int EraseImage(int id);
 #endif
 
     public Text mText;
@@ -193,16 +201,27 @@ public class DataCommunicator : MonoBehaviour
                     mSystemManager.writer.WriteLine(ts);
                     mSystemManager.mbInit = true;
                 }
-
-                float[] fdata = new float[req1.downloadHandler.data.Length / 4];
-                Buffer.BlockCopy(req1.downloadHandler.data, 0, fdata, 0, req1.downloadHandler.data.Length);
-                int Nmp = (int)fdata[0];
+                float[] totalData = new float[req1.downloadHandler.data.Length / 4];
+                Buffer.BlockCopy(req1.downloadHandler.data, 0, totalData, 0, req1.downloadHandler.data.Length);
+                //float[] fdata = new float[req1.downloadHandler.data.Length / 4];
+                
+                int Nmp = (int)totalData[1];
 
                 try
                 {
-                    GCHandle handle = GCHandle.Alloc(fdata, GCHandleType.Pinned);
+                    GCHandle handle = GCHandle.Alloc(totalData, GCHandleType.Pinned);
                     IntPtr ptr = handle.AddrOfPinnedObject();
                     mTracker.CreateKeyFrame(data.id, ptr);
+
+                    int NtrackDataSize = (int)totalData[0];
+                    if (NtrackDataSize < totalData.Length)
+                    {
+                        //오브젝트
+                        int NobjDataSize = (int)totalData[NtrackDataSize];
+                        int Nobj = (int)totalData[NtrackDataSize + 1];
+                        CreateDynamicObjectFrame(data.id, ptr, NtrackDataSize);
+                    }
+                    EraseImage(data.id);
                     handle.Free();
 
                     //update까지 끝
@@ -234,7 +253,12 @@ public class DataCommunicator : MonoBehaviour
                 {
                     mText.text = "create reference err = " + e.ToString();
                 }
-                PointCloudReceivedEvent.RunEvent(new PointCloudReceivedEventArgs(data.id, Nmp, fdata));
+
+                PointCloudReceivedEvent.RunEvent(new PointCloudReceivedEventArgs(data.id, Nmp, totalData));
+
+                
+
+                
             }
         }
         if (data.keyword == "UpdatedLocalMap")

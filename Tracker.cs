@@ -52,10 +52,25 @@ public class Tracker : MonoBehaviour
     private static extern int CreateReferenceFrame2(int id, IntPtr data);
     [DllImport("UnityLibrary")]
     private static extern void UpdateLocalMap(int id, int n, IntPtr data);
-
+    [DllImport("edgeslam")]
+    private static extern void ConvertImage(int id, IntPtr texdata);
+    [DllImport("edgeslam")]
+    private static extern int DynamicObjectTracking(int id, IntPtr posedata);
+    [DllImport("edgeslam")]
+    private static extern void ConvertCoordinateObjectToWorld();
+    [DllImport("edgeslam")]
+    private static extern void UpdateDynamicObjectPoints(IntPtr addr, int size);
 #elif UNITY_ANDROID
     [DllImport("edgeslam")]
     private static extern void SetIMUAddress(IntPtr addr, bool bIMU);
+    [DllImport("edgeslam")]
+    private static extern void ConvertImage(int id, IntPtr texdata);
+    [DllImport("edgeslam")]
+    private static extern int DynamicObjectTracking(int id, IntPtr posedata);
+    [DllImport("edgeslam")]
+    private static extern void ConvertCoordinateObjectToWorld();
+    [DllImport("edgeslam")]
+    private static extern void UpdateDynamicObjectPoints(IntPtr addr, int size);
     [DllImport("edgeslam")]
     private static extern bool Localization(IntPtr texdata, IntPtr posedata, int id, double ts, int nQuality, bool bNotBase, bool bTracking, bool bVisualization);
     [DllImport("edgeslam")]
@@ -73,6 +88,7 @@ public class Tracker : MonoBehaviour
     public ParameterManager mParamManager;
     public EvaluationManager mEvalManager;
     public PoseManager mPoseManager;
+    public PointCloudProcess mPointCloud;
     public Text mText;
 
     string dirPath, filename;
@@ -87,6 +103,10 @@ public class Tracker : MonoBehaviour
     float[] fIMUPose;
     GCHandle imuHandle;
     IntPtr imuPtr;
+
+    float[] oposeData;
+    GCHandle oposeHandle;
+    IntPtr oposePtr;
 
     public bool mbSuccessInit;
     public Camera uvrCam;
@@ -157,6 +177,12 @@ public class Tracker : MonoBehaviour
                 imuPtr = imuHandle.AddrOfPinnedObject();
                 ////imu ptr
                 
+                ////object pose ptr 다중 추정용으로 변경 필요
+                oposeData = new float[12];
+                oposeHandle = GCHandle.Alloc(oposeData, GCHandleType.Pinned);
+                oposePtr = oposeHandle.AddrOfPinnedObject();
+                ////pose ptr
+
             }
             Application.wantsToQuit += WantsToQuit;
         }
@@ -241,7 +267,19 @@ public class Tracker : MonoBehaviour
             double ts = timeSpan.TotalMilliseconds;
             IntPtr addr = (IntPtr)rgbMat.dataAddr();
             var sTime = DateTime.UtcNow;
+            ConvertImage(frameID, addr);
             bool bSuccessTracking = Localization(addr, posePtr, frameID, ts, mManager.AppData.JpegQuality, bNotBase, mTrackParam.bTracking, mTrackParam.bVisualization);
+            int nObj = DynamicObjectTracking(frameID, oposePtr);
+            if (nObj > 10) {
+                //ConvertCoordinateObjectToWorld();
+                Vector3[] array = new Vector3[nObj];
+                GCHandle ahandle = GCHandle.Alloc(array, GCHandleType.Pinned);
+                IntPtr arrayptr = ahandle.AddrOfPinnedObject();
+                UpdateDynamicObjectPoints(arrayptr, nObj);
+                mPointCloud.GetWorldPoints(array, oposeData);
+                mText.text = "Object test = " +frameID+" = "+nObj+" "+ array[0].ToString();
+                ahandle.Free();
+            }
             if (bSuccessTracking)
             {
                 if (mEvalManager.bProcess)
