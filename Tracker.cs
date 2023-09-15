@@ -55,7 +55,7 @@ public class Tracker : MonoBehaviour
     [DllImport("edgeslam")]
     private static extern void ConvertImage(int id, IntPtr texdata);
     [DllImport("edgeslam")]
-    private static extern int DynamicObjectTracking(int id, IntPtr posedata);
+    private static extern int DynamicObjectTracking(int id, ref int objID, IntPtr posedata, IntPtr oposedata);
     [DllImport("edgeslam")]
     private static extern void ConvertCoordinateObjectToWorld();
     [DllImport("edgeslam")]
@@ -66,7 +66,7 @@ public class Tracker : MonoBehaviour
     [DllImport("edgeslam")]
     private static extern void ConvertImage(int id, IntPtr texdata);
     [DllImport("edgeslam")]
-    private static extern int DynamicObjectTracking(int id, IntPtr posedata);
+    private static extern int DynamicObjectTracking(int id, ref int objID, IntPtr posedata, IntPtr oposedata);
     [DllImport("edgeslam")]
     private static extern void ConvertCoordinateObjectToWorld();
     [DllImport("edgeslam")]
@@ -89,6 +89,7 @@ public class Tracker : MonoBehaviour
     public EvaluationManager mEvalManager;
     public PoseManager mPoseManager;
     public PointCloudProcess mPointCloud;
+    public ObjectManager mObjectManager;
     public Text mText;
 
     string dirPath, filename;
@@ -268,8 +269,9 @@ public class Tracker : MonoBehaviour
             IntPtr addr = (IntPtr)rgbMat.dataAddr();
             var sTime = DateTime.UtcNow;
             ConvertImage(frameID, addr);
+            int objID = -1;
             bool bSuccessTracking = Localization(addr, posePtr, frameID, ts, mManager.AppData.JpegQuality, bNotBase, mTrackParam.bTracking, mTrackParam.bVisualization);
-            int nObj = DynamicObjectTracking(frameID, oposePtr);
+            int nObj = DynamicObjectTracking(frameID, ref objID, posePtr, oposePtr);
             if (nObj > 10) {
                 //ConvertCoordinateObjectToWorld();
                 Vector3[] array = new Vector3[nObj];
@@ -277,7 +279,8 @@ public class Tracker : MonoBehaviour
                 IntPtr arrayptr = ahandle.AddrOfPinnedObject();
                 UpdateDynamicObjectPoints(arrayptr, nObj);
                 mPointCloud.GetWorldPoints(array, oposeData);
-                mText.text = "Object test = " +frameID+" = "+nObj+" "+ array[0].ToString();
+                //mText.text = "Object test = " +frameID+" = "+nObj+ "=="+objID+" "+ array[0].ToString();
+                mObjectManager.UpdateObjectPose(objID, ref oposeData);
                 ahandle.Free();
             }
             if (bSuccessTracking)

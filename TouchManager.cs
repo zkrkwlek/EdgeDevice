@@ -193,7 +193,7 @@ public class TouchManager : MonoBehaviour
 
                     //var path = touchObject.GetComponent<PathManager>();
                     //if(touchObject)
-                    //    mText.text = touchObject.tag + ", " + path.mbPath +" "+path.currPathID+ " " +" "+" "+path.contentID + " =" + path.log;
+                    //    mText.text = touc hObject.tag + ", " + path.mbPath +" "+path.currPathID+ " " +" "+" "+path.contentID + " =" + path.log;
                     ////mText.text = logString[(int)voState] + " " + keyword + " " + sendID + "=" + fdata[0] + " " + fdata[1] + " " + fdata[2];
 
                     if (phase == TouchPhase.Ended)

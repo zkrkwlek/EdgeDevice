@@ -57,6 +57,15 @@ public class TouchTest : MonoBehaviour
                     UdpData mdata = new UdpData("VO.REQMOVE", mManager.User.UserName, objPath.contentID, bdata, 1.0);
                     StartCoroutine(mSender.SendData(mdata));
                 }
+                if (btouchObject.transform.tag == "RO")
+                {
+                    mText.text = "RO RO RO RO aaaaaaaaaaaaaaa";
+                }
+                if (btouchObject.transform.parent.tag == "RO")
+                {
+                    mText.text = "RO RO RO RO";
+                }
+                mText.text = btouchObject.transform.tag;
                 //mText.text = "Touch "+ parentObj.tag;
             }
             //else

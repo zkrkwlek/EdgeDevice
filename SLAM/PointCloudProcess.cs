@@ -228,6 +228,7 @@ public class PointCloudProcess : MonoBehaviour
                 m_Particles[i].remainingLifetime = -1f;
             }
             m_ParticleSystem.SetParticles(m_Particles, numParticles);
+            
 
         }
         catch (Exception e)

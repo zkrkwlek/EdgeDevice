@@ -115,6 +115,12 @@ public class ManipulationTest : MonoBehaviour
                 RaycastHit raycastHit;
 
                 bool bHit = Physics.Raycast(raycast, out raycastHit);
+                if (bHit && raycastHit.collider.gameObject.transform.tag == "RO" && touchObject && touchObject.transform.tag == "VO") {
+                    
+                    raycastHit.collider.gameObject.GetComponent<RealObject>().AddObject(touchObject);
+                    mText.text = raycastHit.collider.gameObject.transform.tag;
+                    return;
+                }
                 if (voState == VirtualObjectManipulationState.None && phase == TouchPhase.Began)
                 {
                     if (bHit)
@@ -208,7 +214,7 @@ public class ManipulationTest : MonoBehaviour
             }
             catch(Exception ex)
             {
-                mText.text = ex.ToString();
+                //mText.text = ex.ToString();
             }
         }
         else

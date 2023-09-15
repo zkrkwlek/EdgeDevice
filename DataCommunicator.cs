@@ -37,6 +37,7 @@ public class DataCommunicator : MonoBehaviour
     public SystemManager mSystemManager;
     public ObjectDetection mObjectDetection;
     public Tracker mTracker;
+    public ObjectManager mObjectManager;
     public UVRSpatialTest mSpatialTest;
 
     ExperimentParam mExParam;
@@ -220,6 +221,7 @@ public class DataCommunicator : MonoBehaviour
                         int NobjDataSize = (int)totalData[NtrackDataSize];
                         int Nobj = (int)totalData[NtrackDataSize + 1];
                         CreateDynamicObjectFrame(data.id, ptr, NtrackDataSize);
+                        mObjectManager.UpdateObjFromServer(NtrackDataSize, ref totalData);
                     }
                     EraseImage(data.id);
                     handle.Free();
