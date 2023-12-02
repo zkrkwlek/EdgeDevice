@@ -15,8 +15,10 @@ public class ContentProcessor : MonoBehaviour
     public EvaluationManager mEvalManager;
     public PlaneManager mPlaneManager;
     public VOFrameManager mVOFrameManager;
+    public ObjectManager mObjManager;
     ObjectParam mObjParam;
     DrawPaintParam mDrawParam;
+    Dictionary<int, int> ConnectedGraph;
 
     ContentManager mContentManager;
     //PathContentManager mPathManager;
@@ -30,6 +32,11 @@ public class ContentProcessor : MonoBehaviour
         //mPathManager = new PathContentManager();
         //mDrawManager = new DrawContentManager();
         //mDrawManager.mDrawParam = mDrawParam;
+
+        //파싱 과정에서 관계 추가.
+        //실제 객체도 추가해야 하는데 이건 어떻게?
+        //오브젝트 매니저의 리얼 오브젝트도 이용해야함.
+        ConnectedGraph = new Dictionary<int, int>();
     }
     void Start()
     {
@@ -49,8 +56,22 @@ public class ContentProcessor : MonoBehaviour
                 Vector3 pos = new Vector3(fdata[idx++], fdata[idx++], fdata[idx++]);
                 Vector3 rot = new Vector3(fdata[idx++], fdata[idx++], fdata[idx++]);
                 Color c = new Color(fdata[idx++], fdata[idx++], fdata[idx++]);
-                float scale = fdata[idx];
-                return mContentManager.Process(id, type, tempObjPrefab, c, pos, scale, startTime, _b, mText);
+                float scale = fdata[idx++];
+                int sgSrcID = (int)fdata[idx++];
+                SceneGraphAttr sgAttr = (SceneGraphAttr)fdata[idx++];
+                SceneGraphType sgType = (SceneGraphType)fdata[idx++];
+                int sgDstID = (int)fdata[idx];
+                SceneGraphNode node = new SceneGraphNode(sgSrcID, sgDstID, sgAttr, sgType);
+                if(sgType == SceneGraphType.Object)
+                {
+                    bool bObj = mObjManager.RealObjDict.ContainsKey(sgDstID);
+                    if (bObj)
+                    {
+                        node.dstObj = mObjManager.RealObjDict[sgDstID];
+                    }
+                }
+                //mText.text = id+" == "+sgDstID + " " + sgType+" "+ sgAttr + " " + sgSrcID+" ";
+                return mContentManager.Process(node, id, type, tempObjPrefab, c, pos, scale, startTime, _b, mText).GetComponent<Content>();
             }
             if ((ContentType)type == ContentType.Draw)
             {

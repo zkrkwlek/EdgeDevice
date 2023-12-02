@@ -55,6 +55,7 @@ public class ApplicationData
     public int numSkipFrames;
     public int numLocalMapPoints;
     public int numLocalKeyFrames;
+    public int numContentKFs;
     public string strBoW_database;
 }
 
@@ -234,10 +235,11 @@ public class SystemManager : MonoBehaviour
             AppData.LocalPort = 40003;
             AppData.JpegQuality = 50;
             AppData.numSkipFrames = 3;
-            AppData.numPyramids = 4;
+            AppData.numPyramids = 8;
             AppData.numFeatures = 800;
             AppData.numLocalMapPoints = 600;
             AppData.numLocalKeyFrames = 50;
+            AppData.numContentKFs = 20;
             File.WriteAllText(dirPath + "/AppData.json", JsonUtility.ToJson(AppData));
         }
 

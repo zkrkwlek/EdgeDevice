@@ -155,8 +155,13 @@ public class Communicator : MonoBehaviour
 
             ConnectDevice();
 
-            float[] IntrinsicData = new float[13];
+            //플롯데이터
+
+            int nFloat = 20;
+            int nByte = 10;
+
             int nidx = 0;
+            float[] IntrinsicData = new float[nFloat];
             IntrinsicData[nidx++] = (float)mSystemManager.CamParam.w;
             IntrinsicData[nidx++] = (float)mSystemManager.CamParam.h;
             IntrinsicData[nidx++] = mSystemManager.CamParam.fx;
@@ -170,6 +175,7 @@ public class Communicator : MonoBehaviour
             IntrinsicData[nidx++] = 0f;
             IntrinsicData[nidx++] = mSystemManager.AppData.JpegQuality;
             IntrinsicData[nidx++] = mSystemManager.AppData.numSkipFrames;
+            IntrinsicData[nidx++] = mSystemManager.AppData.numContentKFs;
 
             ////알람 서버에 등록
             ApplicationData appData = mSystemManager.AppData;
@@ -211,7 +217,7 @@ public class Communicator : MonoBehaviour
             string msg2 = mSystemManager.User.UserName + "," + mSystemManager.User.MapName;
             byte[] bdatab = System.Text.Encoding.UTF8.GetBytes(msg2);
             float[] fdataa = IntrinsicData;// mSystemManager.IntrinsicData;
-            int nByte = 10;
+            
             int nbFlagIdx = fdataa.Length * 4;
             byte[] bdata2 = new byte[nByte + nbFlagIdx + bdatab.Length];
             bdata2[nbFlagIdx] = mSystemManager.User.ModeMapping ? (byte)1 : (byte)0;
@@ -221,6 +227,7 @@ public class Communicator : MonoBehaviour
             bdata2[nbFlagIdx + 4] = mSystemManager.User.ModeAsyncQualityTest ? (byte)1 : (byte)0;
             bdata2[nbFlagIdx + 5] = mExParam.bEdgeBase ? (byte)1 : (byte)0;
             bdata2[nbFlagIdx + 6] = mExParam.bCreateKFMethod ? (byte)1 : (byte)0;
+            bdata2[nbFlagIdx + 7] = mExParam.bCommuTest ? (byte)1 : (byte)0;
 
             //인트린직 파라메터
             Buffer.BlockCopy(fdataa, 0, bdata2, 0, nbFlagIdx);

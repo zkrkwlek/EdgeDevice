@@ -206,23 +206,22 @@ public class DataCommunicator : MonoBehaviour
                 Buffer.BlockCopy(req1.downloadHandler.data, 0, totalData, 0, req1.downloadHandler.data.Length);
                 //float[] fdata = new float[req1.downloadHandler.data.Length / 4];
                 
-                int Nmp = (int)totalData[1];
-
                 try
                 {
                     GCHandle handle = GCHandle.Alloc(totalData, GCHandleType.Pinned);
                     IntPtr ptr = handle.AddrOfPinnedObject();
                     mTracker.CreateKeyFrame(data.id, ptr);
 
-                    int NtrackDataSize = (int)totalData[0];
-                    if (NtrackDataSize < totalData.Length)
-                    {
-                        //오브젝트
-                        int NobjDataSize = (int)totalData[NtrackDataSize];
-                        int Nobj = (int)totalData[NtrackDataSize + 1];
-                        CreateDynamicObjectFrame(data.id, ptr, NtrackDataSize);
-                        mObjectManager.UpdateObjFromServer(NtrackDataSize, ref totalData);
-                    }
+                    //오브젝트 트래킹
+                    //int NtrackDataSize = (int)totalData[0];
+                    //if (NtrackDataSize < totalData.Length)
+                    //{
+                    //    //오브젝트
+                    //    int NobjDataSize = (int)totalData[NtrackDataSize];
+                    //    int Nobj = (int)totalData[NtrackDataSize + 1];
+                    //    CreateDynamicObjectFrame(data.id, ptr, NtrackDataSize);
+                    //    mObjectManager.UpdateObjFromServer(NtrackDataSize, ref totalData);
+                    //}
                     EraseImage(data.id);
                     handle.Free();
 
@@ -256,11 +255,10 @@ public class DataCommunicator : MonoBehaviour
                     mText.text = "create reference err = " + e.ToString();
                 }
 
-                PointCloudReceivedEvent.RunEvent(new PointCloudReceivedEventArgs(data.id, Nmp, totalData));
+                //포인트 클라우드 수정
+                //int Nmp = (int)totalData[1];
+                //PointCloudReceivedEvent.RunEvent(new PointCloudReceivedEventArgs(data.id, Nmp, totalData));
 
-                
-
-                
             }
         }
         if (data.keyword == "UpdatedLocalMap")
@@ -491,6 +489,7 @@ public class DataCommunicator : MonoBehaviour
         {
             try
             {
+                
                 //GCHandle handle = GCHandle.Alloc(fdata, GCHandleType.Pinned);
                 //IntPtr ptr = handle.AddrOfPinnedObject();
                 mTracker.CreateKeyFrame(data.id, addr);

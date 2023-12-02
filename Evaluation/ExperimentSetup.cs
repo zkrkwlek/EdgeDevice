@@ -58,6 +58,11 @@ public class ExperimentSetup : MonoBehaviour
             {
                 sKeywords += ",OXR::IMAGE";
             }
+            if (param.bCoordAlign)
+            {
+                sKeywords += ",DevicePoseForAlign";
+                rKeywords += ",GetScaleFactor,single";
+            }
         }
         catch(Exception e)
         {

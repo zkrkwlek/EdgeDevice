@@ -61,7 +61,9 @@ class ExperimentParam : Param
     public bool bPathTest;
     public bool bDrawTest;
     public bool bObjectDetection;
+    public bool bCommuTest; //가상 객체 통신할 때 true = 그리드, false = 키프레임
     public bool bOXRTest;
+    public bool bCoordAlign; //이종 기기 결합시.(ex)홀로렌즈
 }
 
 [Serializable]

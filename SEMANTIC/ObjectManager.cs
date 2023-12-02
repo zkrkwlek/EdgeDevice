@@ -29,13 +29,14 @@ public class RealObject: MonoBehaviour
     }
     public void AddObject(GameObject obj)
     {
-        ConnectedObjs.Add(obj);
+        if(!ConnectedObjs.Contains(obj))
+            ConnectedObjs.Add(obj);
     }
     public void RemoveObject(GameObject obj)
     {
-        ConnectedObjs.Remove(obj);
+        if(ConnectedObjs.Contains(obj))
+            ConnectedObjs.Remove(obj);
     }
-
     public List<GameObject> ConnectedObjs;
 }
 

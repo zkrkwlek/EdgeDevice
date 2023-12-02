@@ -19,9 +19,6 @@ public class TestManager : MonoBehaviour
     private static extern void StoreImage(int id, IntPtr addr);
 #endif
 
-
-
-
     //public CameraManager mCamManager;
     public DataCommunicator mSender;
     public SystemManager mSystemManager;
@@ -32,6 +29,7 @@ public class TestManager : MonoBehaviour
     TrackerParam mTrackParam;
     ExperimentParam mExParam;
     bool bEdgeBase;
+    bool bCoordAlign;
 
     int mnSkipFrame;
 
@@ -116,7 +114,41 @@ public class TestManager : MonoBehaviour
                 StoreImage(frameID, addr2);
                 //if (bEdgeBase)
                 //    bNeedNewKF = false;
+
+                ////기기의 자세를 서버로 전송.
             }
+
+            if (bCoordAlign)
+            {
+                //기기 자세 전송
+                //키워드 : DevicePoseForAlign
+                var q = Camera.main.transform.rotation;
+                var t = Camera.main.transform.position;
+                //Matrix4x4 invertYMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(1, -1, 1));
+                //Matrix4x4 ARM = invertYMatrix * Matrix4x4.TRS(t,q,Vector3.one) * invertYMatrix;
+                var T = Matrix4x4.TRS(t, q, Vector3.one);
+                float[] farray = new float[12];
+                farray[0] = T.m00;
+                farray[1] = T.m01;
+                farray[2] = T.m02;
+
+                farray[3] = T.m10;
+                farray[4] = T.m11;
+                farray[5] = T.m12;
+
+                farray[6] = T.m20;
+                farray[7] = T.m21;
+                farray[8] = T.m22;
+
+                farray[9] = t.x;
+                farray[10] = t.y;
+                farray[11] = t.z;
+                byte[] bdata = new byte[48];
+                Buffer.BlockCopy(farray, 0, bdata, 0, 48);
+                UdpData pdata = new UdpData("DevicePoseForAlign", mSystemManager.User.UserName, frameID, bdata, 0f);
+                StartCoroutine(mSender.SendData(pdata));
+            }
+
             //if((!bEdgeBase && frameID % mnSkipFrame == 0) || (bEdgeBase && bNeedNewKF))
             //{
             //    //mText.text = "image id = " + frameID+" "+prevID;
@@ -151,6 +183,7 @@ public class TestManager : MonoBehaviour
         }
         
         bEdgeBase = mExParam.bEdgeBase;
+        bCoordAlign = mExParam.bCoordAlign;
 
         data = new MatOfByte();
         int[] temp = new int[2];
