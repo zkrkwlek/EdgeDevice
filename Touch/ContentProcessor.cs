@@ -127,34 +127,56 @@ public class ContentProcessor : MonoBehaviour
         mContentManager.Move(id);
     }
 
-    public void UpdateVirtualFrame(int fid, ref float[] fdata, DateTime startTime, bool _b)
+    public void UpdateVirtualFrame(int fid, ref float[] fdata, int idx, DateTime startTime, bool _b)
     {
 
         try {
+            //0 데이터 파싱 정보
+            //1 전체 데이터 사이즈
+            //2 연결 개수, Nc
+            //3+Nc 실제 데이터 정보
             //var newVF = new VirtualFrame(fid);
+
+            //mText.text = "content test = " + Nconnect + " " + Ncontent;
+
+            int Nconnect = (int)fdata[idx+2];
+            int Ncontent = (int)fdata[idx+3 + Nconnect];
+            int cidx = idx+4+Nconnect;
+            
             var newVF = mVOFrameManager.GetFrame(fid);
-
             Color color = Color.white;
-            int N = (int)fdata[0];
-            int idx = 1;
-            //mText.text = "update object start~~ " + N;
-            for (int j = 0; j < N; j++)
-            {
-                int len = (int)fdata[idx];
-                Content content = null;
-                content = Process(ref fdata, idx, startTime, _b, mText);
-                idx += len;
 
-                if (content != null)
+            for (int j = 0; j < Ncontent; j++)
+            {
+                int len = (int)fdata[cidx];
+                Content content = null;
+                content = Process(ref fdata, cidx, startTime, _b, mText);
+                cidx += len;
+
+                //if (content != null)
+                //{
+                //    //여기에 제대로 들어가는가?
+                //    newVF.AddContent(content);
+                //}
+            }
+
+            for(int j = 0; j < Nconnect; j++)
+            {
+                int id = (int)fdata[3 + idx + j];
+                if (mContentManager.CheckContent(id))
                 {
-                    //여기에 제대로 들어가는가?
-                    newVF.AddContent(content);
-                }
+                    Content content = mContentManager.GetContent(id);
+                    if(content != null)
+                    {
+                        newVF.AddContent(content);
+                    }
+                }    
             }
 
             mVOFrameManager.AddFrame(newVF);
+
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             mText.text = e.ToString();
         }

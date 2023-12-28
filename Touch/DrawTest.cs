@@ -157,7 +157,7 @@ public class DrawTest : MonoBehaviour
                     byte[] bdata = new byte[tempData.Length * 4];
                     Buffer.BlockCopy(tempData, 0, bdata, 0, bdata.Length); //전체 실수형 데이터 수
 
-                    ////length, id, type, pos1, pos2, color, scale = 13
+                    ////length, id, type, plane id, pos1, pos2, color, scale = 14
                     byte[] bdata2 = ContentData.Generate(14f, touchID, (float)ContentType.Draw, pid,
                         point.x, point.y, point.z,
                         prevPoint.x, prevPoint.y, prevPoint.z, 

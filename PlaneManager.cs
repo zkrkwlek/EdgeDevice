@@ -154,27 +154,30 @@ public class PlaneManager : MonoBehaviour
     {
         return Planes.ContainsKey(id);
     }
-    public void UpdateLocalPlane(int fid, float[] fdata)
+    public void UpdateLocalPlane(int fid, ref float[] fdata, int sidx)
     {
         try {
             var newVF = mVOFrameManager.GetFrame(fid);
-
-            int N = (int)fdata[0];
-            int idx = 1;
-            for (int j = 0; j < N; j++)
+            int s = (int)fdata[sidx];
+            if(s > 2)
             {
-                int pid = (int)fdata[idx];
-                float nx = fdata[idx + 1];
-                float ny = fdata[idx + 2];
-                float nz = fdata[idx + 3];
-                float d = fdata[idx + 4];
-                idx += 5;
-                //mText.text = id + " " + nx + " " + ny + " " + nz;
-                //mPlaneManager.AddPlane(id, nx, ny, nz, d);
-                UpdatePlane(pid, nx, ny, nz, d);
-                newVF.AddPlane(Planes[pid]);
+                int N = (int)fdata[sidx + 2];
+                int idx = sidx + 3;
+                for (int j = 0; j < N; j++)
+                {
+                    int pid = (int)fdata[idx];
+                    float nx = fdata[idx + 1];
+                    float ny = fdata[idx + 2];
+                    float nz = fdata[idx + 3];
+                    float d = fdata[idx + 4];
+                    idx += 5;
+                    //mText.text = id + " " + nx + " " + ny + " " + nz;
+                    //mPlaneManager.AddPlane(id, nx, ny, nz, d);
+                    UpdatePlane(pid, nx, ny, nz, d);
+                    newVF.AddPlane(Planes[pid]);
+                }
+                mVOFrameManager.AddFrame(newVF);
             }
-            mVOFrameManager.AddFrame(newVF);
         }
         catch(Exception e)
         {

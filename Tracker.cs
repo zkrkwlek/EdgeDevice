@@ -47,11 +47,11 @@ public class Tracker : MonoBehaviour
     [DllImport("UnityLibrary")]
     private static extern void NeedNewKeyFrame2(int fid);
     [DllImport("UnityLibrary")]
-    private static extern int CreateReferenceFrame(int id, bool bNotBase, IntPtr data);
+    private static extern int CreateReferenceFrame(int id, bool bNotBase, IntPtr data, int idx, IntPtr mapdata);
     [DllImport("UnityLibrary")]
     private static extern int CreateReferenceFrame2(int id, IntPtr data);
     [DllImport("UnityLibrary")]
-    private static extern void UpdateLocalMap(int id, int n, IntPtr data);
+    private static extern void UpdateLocalMap(int id,IntPtr data);
     [DllImport("edgeslam")]
     private static extern void ConvertImage(int id, IntPtr texdata);
     [DllImport("edgeslam")]
@@ -78,11 +78,11 @@ public class Tracker : MonoBehaviour
     [DllImport("edgeslam")]
     private static extern void NeedNewKeyFrame2(int fid);
     [DllImport("edgeslam")]
-    private static extern int CreateReferenceFrame(int id, bool bNotBase, IntPtr data);    
+    private static extern int CreateReferenceFrame(int id, bool bNotBase, IntPtr data, int idx, IntPtr mapdata);    
     [DllImport("edgeslam")]
     private static extern int CreateReferenceFrame2(int id, IntPtr data);    
     [DllImport("edgeslam")]
-    private static extern void UpdateLocalMap(int id, int n, IntPtr data);    
+    private static extern void UpdateLocalMap(int id, IntPtr data);    
 #endif
     public SystemManager mManager;
     public ParameterManager mParamManager;
@@ -199,13 +199,13 @@ public class Tracker : MonoBehaviour
         
     }
 
-    public void CreateKeyFrame(int id, IntPtr ptr)
+    public void CreateKeyFrame(int id, IntPtr ptr, int idx, IntPtr ptr2)
     {
         
 
         if (mExParam.bCreateKFMethod)
         {
-            int N = CreateReferenceFrame(id, bNotBase, ptr);
+            int N = CreateReferenceFrame(id, bNotBase, ptr, idx, ptr2);
             bool bRes = true;
             if (N < 30)
             {
@@ -235,13 +235,13 @@ public class Tracker : MonoBehaviour
         }
     }
 
-    public void UpdateData(int id, int n, IntPtr ptr)
+    public void UpdateData(int id, IntPtr ptr)
     {
         if (!mbSuccessInit && mExParam.bEdgeBase)
         {
             mbSuccessInit = true;
         }
-        UpdateLocalMap(id, n, ptr);
+        UpdateLocalMap(id, ptr);
     }
 
 

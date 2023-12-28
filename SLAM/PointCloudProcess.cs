@@ -147,6 +147,88 @@ public class PointCloudProcess : MonoBehaviour
         m_ParticleSystem.SetParticles(ListParticles.ToArray(), ListParticles.Count);
     }
 
+    public void UpdateMPs(ref float[] posedata, ref float[] mapdata, int N, int idx) {
+        try { 
+            Matrix4x4 ARM = Matrix4x4.identity;
+            if (!bTracking)
+            {
+                Matrix3x3 R = new Matrix3x3(
+                    posedata[idx + 3], posedata[idx + 4],  posedata[idx + 5],
+                    posedata[idx + 6], posedata[idx + 7],  posedata[idx + 8],
+                    posedata[idx + 9], posedata[idx + 10], posedata[idx + 11]
+                );
+                PoseData data = new PoseData();
+                data.rot = R.GetQuaternion();
+                data.pos = new Vector3(posedata[idx + 12], posedata[idx + 13], posedata[idx + 14]);
+                ARM = invertYMatrix * Matrix4x4.TRS(data.pos, data.rot, Vector3.one) * invertYMatrix;
+            }
+            int numParticles = N;
+            if (m_Particles == null || m_Particles.Length < numParticles)
+            {
+                m_Particles = new ParticleSystem.Particle[numParticles];
+                m_NumParticles = numParticles;
+            }
+            //var color = m_ParticleSystem.main.startColor.color;
+            var size = m_ParticleSystem.main.startSize.constant;
+
+            for (int i = 0; i < N; i++)
+            {
+                //dataIdx += 4;
+                //int mid = (int)eventArgs.fdata[dataIdx++];
+                //int label = (int)eventArgs.fdata[dataIdx++];
+                //float x = eventArgs.fdata[dataIdx++];
+                //float y = eventArgs.fdata[dataIdx++];
+                //float z = eventArgs.fdata[dataIdx++];
+                float x = mapdata[3 * i];
+                float y = -mapdata[3 * i+1];
+                float z = mapdata[3 * i+2];
+
+                //if (mPointParam.nMode == 1)
+                //{
+                //    y *= -1f;
+                //}
+
+                Vector3 pt = new Vector3(x, y, z);
+                if (!bTracking)
+                {
+                    var T = Camera.main.transform.localToWorldMatrix * ARM;
+                    pt = T.MultiplyPoint(pt);
+                }
+
+                var color = labelColors[0];
+                //if (label == (int)SegLabel.FLOOR)
+                //{
+                //    color = labelColors[1];
+                //}
+                //if (label == (int)SegLabel.WALL)
+                //{
+                //    color = labelColors[2];
+                //}
+                //if (label == (int)SegLabel.CEIL)
+                //{
+                //    color = labelColors[3];
+                //}
+
+                //트래킹 모드가 아니면 변환이 필요함.
+                m_Particles[i].startColor = color;
+                m_Particles[i].startSize = size;
+                m_Particles[i].position = pt;
+                m_Particles[i].remainingLifetime = 1f;
+            }
+            for (int i = numParticles; i < m_NumParticles; ++i)
+            {
+                m_Particles[i].remainingLifetime = -1f;
+            }
+            m_ParticleSystem.SetParticles(m_Particles, numParticles);
+
+
+        }
+        catch (Exception e)
+        {
+            mText.text = e.ToString();
+        }
+    }
+
     int m_NumParticles;
     ParticleSystem.Particle[] m_Particles;
     Matrix4x4 invertYMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(1, -1, 1));

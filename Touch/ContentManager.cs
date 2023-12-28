@@ -144,6 +144,12 @@ public class ContentManager
     {
         return ContentDictionary.ContainsKey(id);
     }
+
+    public Content GetContent(int id)
+    {
+        return ContentDictionary[id].GetComponent<Content>();
+    }
+
     public void RegistContent(int id, GameObject c)
     {
         ContentDictionary.Add(id, c);
