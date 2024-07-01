@@ -46,7 +46,7 @@ public class Communicator : MonoBehaviour
     bool WantsToQuit() {
         //Application.CancelQuit();
         ////Device & Map store
-        string addr2 = mSystemManager.AppData.Address + "/Store?keyword=DeviceDisconnect&id=0&src=" + mSystemManager.User.UserName;
+        string addr2 = mSystemManager.AppData.Address + "/Upload?keyword=DeviceDisconnect&id=0&src=" + mSystemManager.User.UserName;
         string msg2 = mSystemManager.User.UserName + "," + mSystemManager.User.MapName;
         byte[] bdata = System.Text.Encoding.UTF8.GetBytes(msg2);
 
@@ -105,6 +105,7 @@ public class Communicator : MonoBehaviour
         {
             TrackerParam mTrackParam = (TrackerParam)mParamManager.DictionaryParam["Tracker"];
             ExperimentParam mExParam = (ExperimentParam)mParamManager.DictionaryParam["Experiment"];
+            var mCamParam = (CamParam)mParamManager.DictionaryParam["Camera"];
             mSystemManager.User.ModeMapping = mTrackParam.bMapping;
             mSystemManager.User.ModeTracking = mTrackParam.bTracking;
             mSystemManager.User.ModeAsyncQualityTest = mTrackParam.bPlaneOptimization;
@@ -177,6 +178,13 @@ public class Communicator : MonoBehaviour
             IntrinsicData[nidx++] = mSystemManager.AppData.numSkipFrames;
             IntrinsicData[nidx++] = mSystemManager.AppData.numContentKFs;
 
+            if (mCamParam.bCaptureDepth)
+            {
+                IntrinsicData[nidx++] = 40f;
+                IntrinsicData[nidx++] = 40f;
+                IntrinsicData[nidx++] = 5000f;
+            }
+
             ////알람 서버에 등록
             ApplicationData appData = mSystemManager.AppData;
             UdpAsyncHandler.Instance.UdpSocketBegin(appData.UdpAddres, appData.UdpPort, appData.LocalPort);
@@ -231,7 +239,7 @@ public class Communicator : MonoBehaviour
 
             //인트린직 파라메터
             Buffer.BlockCopy(fdataa, 0, bdata2, 0, nbFlagIdx);
-            //플래그 데이터
+            //플래그
             Buffer.BlockCopy(bdatab, 0, bdata2, nbFlagIdx + nByte, bdatab.Length);
 
             UdpData deviceConnectData = new UdpData("DeviceConnect", mSystemManager.User.UserName, 0, bdata2, ts);

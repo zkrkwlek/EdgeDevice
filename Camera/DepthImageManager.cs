@@ -11,11 +11,13 @@ public class DepthImageManager : MonoBehaviour
 {
     public DataCommunicator mSender;
     public SystemManager mManager;
+    public ParameterManager mParamManager;
     public AROcclusionManager _occlusionManager;
     public Text mText;
     Texture2D _depthTexture;
     short[] _depthArray;
 
+    CamParam mCamParam;
     float InvalidDepthValue = 10000f;
     float MillimeterToMeter = 0.0001f;
 
@@ -32,7 +34,14 @@ public class DepthImageManager : MonoBehaviour
     int mnSkipFrame;
     void Awake()
     {
-        mnSkipFrame = mManager.AppData.numSkipFrames;
+        mCamParam = (CamParam)mParamManager.DictionaryParam["Camera"];
+        if(!mCamParam.bCaptureDepth)
+        {
+            enabled = false;
+            return;
+        }
+        var mTrackParam = (TrackerParam)mParamManager.DictionaryParam["Tracker"];
+        mnSkipFrame = mTrackParam.nSkipFrames;
     }
     unsafe void OnDepthImageReceived(AROcclusionFrameEventArgs eventArgs)
     {
@@ -56,7 +65,7 @@ public class DepthImageManager : MonoBehaviour
                 var timeSpan = DateTime.UtcNow - mManager.StartTime;
                 double ts = timeSpan.TotalMilliseconds;
                 byte[] bytes = _depthTexture.EncodeToPNG();
-                UdpData idata = new UdpData("Depth", mManager.User.UserName, frameID, bytes, ts);
+                UdpData idata = new UdpData("DDepth", mManager.User.UserName, frameID, bytes, ts);
                 StartCoroutine(mSender.SendData(idata));
             }
             frameID++;

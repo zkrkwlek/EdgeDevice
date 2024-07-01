@@ -25,6 +25,7 @@ public class TestManager : MonoBehaviour
     public Text mText;
     public RawImage rawImage;
 
+    string keyword;
     public ParameterManager mParamManager;
     TrackerParam mTrackParam;
     ExperimentParam mExParam;
@@ -95,30 +96,7 @@ public class TestManager : MonoBehaviour
                     bNeedNewKF = false;
                 }
             }
-
-            if (bSendImage)
-            {
-                //이미지 압축
-                Imgcodecs.imencode(".jpg", e.rgbMat.clone(), data, param);//jpg
-                //NDK로 전송
-                //IntPtr addr = (IntPtr)data.dataAddr();
-                //UdpData idata = new UdpData("Image", mSystemManager.User.UserName, frameID, addr, data.rows(), 0f);
-                //StartCoroutine(mSender.SendDataWithNDK(idata));
-                byte[] bImgData = data.toArray();
-                UdpData idata = new UdpData("Image", mSystemManager.User.UserName, frameID, bImgData, 0f);
-                StartCoroutine(mSender.SendData(idata));
-                bSendImage = false;
-
-                //여기서 이미지를 저장하는게 나을지도 모름.
-                IntPtr addr2 = (IntPtr)e.rgbMat.dataAddr();
-                StoreImage(frameID, addr2);
-                //if (bEdgeBase)
-                //    bNeedNewKF = false;
-
-                ////기기의 자세를 서버로 전송.
-            }
-
-            if (bCoordAlign)
+            if (bCoordAlign && bSendImage)
             {
                 //기기 자세 전송
                 //키워드 : DevicePoseForAlign
@@ -147,6 +125,27 @@ public class TestManager : MonoBehaviour
                 Buffer.BlockCopy(farray, 0, bdata, 0, 48);
                 UdpData pdata = new UdpData("DevicePoseForAlign", mSystemManager.User.UserName, frameID, bdata, 0f);
                 StartCoroutine(mSender.SendData(pdata));
+            }
+            if (bSendImage)
+            {
+                //이미지 압축
+                Imgcodecs.imencode(".jpg", e.rgbMat.clone(), data, param);//jpg
+                //NDK로 전송
+                //IntPtr addr = (IntPtr)data.dataAddr();
+                //UdpData idata = new UdpData("Image", mSystemManager.User.UserName, frameID, addr, data.rows(), 0f);
+                //StartCoroutine(mSender.SendDataWithNDK(idata));
+                byte[] bImgData = data.toArray();
+                UdpData idata = new UdpData(keyword, mSystemManager.User.UserName, frameID, bImgData, 0f);
+                StartCoroutine(mSender.SendData(idata));
+                bSendImage = false;
+
+                //여기서 이미지를 저장하는게 나을지도 모름.
+                IntPtr addr2 = (IntPtr)e.rgbMat.dataAddr();
+                StoreImage(frameID, addr2);
+                //if (bEdgeBase)
+                //    bNeedNewKF = false;
+
+                ////기기의 자세를 서버로 전송.
             }
 
             //if((!bEdgeBase && frameID % mnSkipFrame == 0) || (bEdgeBase && bNeedNewKF))
@@ -182,6 +181,12 @@ public class TestManager : MonoBehaviour
             return;
         }
         
+        var mCamParam = (CamParam)mParamManager.DictionaryParam["Camera"];
+        if (mCamParam.bCaptureDepth)
+            keyword = "DImage";
+        else
+            keyword = "Image";
+
         bEdgeBase = mExParam.bEdgeBase;
         bCoordAlign = mExParam.bCoordAlign;
 

@@ -10,20 +10,16 @@ using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
-public class CamParam
-{
-    public int width;
-    public int height;
-    public bool bShowLog;
-}
+
 
 public class CameraImageManager : MonoBehaviour
 {
     public Text mText;
     public ARCameraManager cameraManager;
+    public ParameterManager mParamManager;
     public PoseManager poseManager;
 
-    CamParam param;
+    CamParam mCamParam;
     string dirPath, filename;
 
     [HideInInspector]
@@ -41,7 +37,6 @@ public class CameraImageManager : MonoBehaviour
 
     bool WantsToQuit()
     {
-        File.WriteAllText(filename, JsonUtility.ToJson(param));
         return true;
     }
 
@@ -77,6 +72,10 @@ public class CameraImageManager : MonoBehaviour
                 float fy = cameraIntrinsics.focalLength.y;
                 float cx = cameraIntrinsics.principalPoint.x;
                 float cy = cameraIntrinsics.principalPoint.y;
+                mCamParam.fx = fx;
+                mCamParam.fy = fy;
+                mCamParam.cx = cx;
+                mCamParam.cy = cy;
 
                 Mat camMatrix = new Mat(3, 3, CvType.CV_64FC1);
                 camMatrix.put(0, 0, fx);
@@ -113,7 +112,7 @@ public class CameraImageManager : MonoBehaviour
                 CameraInitEvent.RunEvent(new CameraInitEventArgs(camMatrix, invCamMatrix, distCoeffs, (int)width, (int)height, widthScale, heightScale, cropped, scaled));
                 bInit = true;
 
-                if(param.bShowLog)
+                if(mCamParam.bShowLog)
                     mText.text = image.width+" "+image.height+"||"+Screen.width+" "+Screen.height+"= "+widthScale+" "+heightScale+" "+cropped;
             }
 
@@ -149,21 +148,8 @@ public class CameraImageManager : MonoBehaviour
     void Awake()
     {
         //파라메터 로드
-        dirPath = Application.persistentDataPath + "/data/Param";
-        filename = dirPath + "/CameraParam.json";
-        try
-        {
-            string strAddData = File.ReadAllText(filename);
-            param = JsonUtility.FromJson<CamParam>(strAddData);
-            //mText.text = "success load " + load_scripts;
-        }
-        catch (Exception e)
-        {
-            param = new CamParam();
-            param.bShowLog = false;
-            param.width = 640;
-            param.height = 480;
-        }
+        mCamParam = (CamParam)mParamManager.DictionaryParam["Camera"];
+
         //파라메터 로드
 
         //카메라 회전에 따라서 변화시키기
@@ -175,14 +161,14 @@ public class CameraImageManager : MonoBehaviour
             screenOrientation = Screen.orientation;
             if (screenOrientation == ScreenOrientation.LandscapeLeft || screenOrientation == ScreenOrientation.LandscapeRight)
             {
-                height = param.height;
-                width = param.width;
+                height = mCamParam.height;
+                width = mCamParam.width;
             }else if(screenOrientation == ScreenOrientation.Portrait)
             {
-                height = param.width;
-                width = param.height;
+                height = mCamParam.width;
+                width = mCamParam.height;
             }
-
+            
             conversionParams = new XRCpuImage.ConversionParams
             {
                 // Get the entire image.

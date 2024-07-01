@@ -14,7 +14,7 @@ public class DataSender : MonoBehaviour
 
     UnityWebRequest SetRequest(string keyword, byte[] data, int id, double ts)
     {
-        string addr2 = mSystemManager.AppData.Address + "/Store?keyword=" + keyword + "&id=" + id + "&ts=" + ts + "&src=" + mSystemManager.User.UserName;
+        string addr2 = mSystemManager.AppData.Address + "/Upload?keyword=" + keyword + "&id=" + id + "&ts=" + ts + "&src=" + mSystemManager.User.UserName;
         //string addr2 = strAddr + "/Store?keyword=" + keyword + "&id=" + id + "&ts=" + ts + "&src=" + strUser;
         //if (ts > 0.0)
         //addr2 += "&type2=" + ts;

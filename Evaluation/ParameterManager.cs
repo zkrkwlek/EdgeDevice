@@ -12,6 +12,19 @@ public class Param
     public bool bEnable = true;
 }
 [Serializable]
+public class CamParam : Param
+{
+    public int width;
+    public int height;
+    public float fx;
+    public float fy;
+    public float cx;
+    public float cy;
+    public bool bCaptureDepth;
+    public bool bShowLog;
+}
+
+[Serializable]
 public class ObjectParam : Param
 {
     public float fWalkingObjScale;
@@ -64,6 +77,7 @@ class ExperimentParam : Param
     public bool bCommuTest; //가상 객체 통신할 때 true = 그리드, false = 키프레임
     public bool bOXRTest;
     public bool bCoordAlign; //이종 기기 결합시.(ex)홀로렌즈
+    public bool bIMU;
 }
 
 [Serializable]
@@ -83,6 +97,7 @@ public class ParameterManager : MonoBehaviour
     public Text mText;
     public Dictionary<string, Param> DictionaryParam;
     TrackerParam mTrackerParam;
+    CamParam mCamParam;
     ArUcoMarkerParam mMarkerParam;
     ExperimentParam mExperimentParam;
     EvaluationParam mEvalParam;
@@ -105,6 +120,7 @@ public class ParameterManager : MonoBehaviour
                 }
             }
         }
+        File.WriteAllText(dirPath + "/CameraParam.json", JsonUtility.ToJson(mCamParam));
         File.WriteAllText(dirPath + "/Tracker.json", JsonUtility.ToJson(mTrackerParam));
         File.WriteAllText(dirPath + "/MarkerParam.json", JsonUtility.ToJson(mMarkerParam));
         File.WriteAllText(dirPath + "/ExperimentParam.json", JsonUtility.ToJson(mExperimentParam));
@@ -119,6 +135,23 @@ public class ParameterManager : MonoBehaviour
     {
         DictionaryParam = new Dictionary<string, Param>();
         dirPath = Application.persistentDataPath + "/data/Param";
+
+        //카메라 파라메터
+
+        try
+        {
+            string strAddData = File.ReadAllText(dirPath + "/CameraParam.json");
+            mCamParam = JsonUtility.FromJson<CamParam>(strAddData);
+            //mText.text = "success load " + load_scripts;
+        }
+        catch (Exception e)
+        {
+            mCamParam = new CamParam();
+            mCamParam.bShowLog = false;
+            mCamParam.bCaptureDepth = false;
+            mCamParam.width = 640;
+            mCamParam.height = 480;
+        }
 
         //트래킹 파라메터 로드
         //filename = dirPath + "/Tracker.json";
@@ -221,6 +254,7 @@ public class ParameterManager : MonoBehaviour
         //딕셔너리에 저장
         try
         {
+            DictionaryParam.Add("Camera",mCamParam);
             DictionaryParam.Add("Tracker", mTrackerParam);
             DictionaryParam.Add("Experiment", mExperimentParam);
             DictionaryParam.Add("Evaluation", mEvalParam);

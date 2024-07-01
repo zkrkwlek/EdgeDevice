@@ -198,7 +198,7 @@ public class SystemManager : MonoBehaviour
             User.numDatasetFileName = 0;
             User.UserName = "zkrkwleks20a";
             User.MapName = "TestMap";
-            User.SendKeywords = "Image,Gyro,Accelerometer,DeviceConnect,DeviceDisconnect,DevicePosition,ContentGeneration,VO.SELECTION";
+            User.SendKeywords = "Gyro,Accelerometer,DeviceConnect,DeviceDisconnect,DevicePosition,ContentGeneration,VO.SELECTION";
             User.ReceiveKeywords = "ReferenceFrame,single,ObjectDetection,single,PlaneLine,single,LocalContent,single";
             User.Experiments = "ReferenceFrame,Tracking,Content,ObjectDetection,Segmentation";
             User.LoadScripts = "";

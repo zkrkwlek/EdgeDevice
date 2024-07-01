@@ -211,7 +211,7 @@ public class PointCloudProcess : MonoBehaviour
 
                 //트래킹 모드가 아니면 변환이 필요함.
                 m_Particles[i].startColor = color;
-                m_Particles[i].startSize = size;
+                m_Particles[i].startSize = size;   
                 m_Particles[i].position = pt;
                 m_Particles[i].remainingLifetime = 1f;
             }

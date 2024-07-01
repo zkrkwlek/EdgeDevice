@@ -63,6 +63,10 @@ public class ExperimentSetup : MonoBehaviour
                 sKeywords += ",DevicePoseForAlign";
                 rKeywords += ",GetScaleFactor,single";
             }
+            if (param.bIMU)
+            {
+                sKeywords += ",IMUrawdata";
+            }
         }
         catch(Exception e)
         {

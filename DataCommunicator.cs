@@ -89,7 +89,7 @@ public class DataCommunicator : MonoBehaviour
 
     UnityWebRequest SetRequest(string keyword, byte[] data, int id, double ts)
     {
-        string addr2 = mSystemManager.AppData.Address + "/Store?keyword=" + keyword + "&id=" + id + "&ts=" + ts + "&src=" + mSystemManager.User.UserName;
+        string addr2 = mSystemManager.AppData.Address + "/Upload?keyword=" + keyword + "&id=" + id + "&ts=" + ts + "&src=" + mSystemManager.User.UserName;
         //string addr2 = strAddr + "/Store?keyword=" + keyword + "&id=" + id + "&ts=" + ts + "&src=" + strUser;
         //if (ts > 0.0)
         //addr2 += "&type2=" + ts;
@@ -123,7 +123,7 @@ public class DataCommunicator : MonoBehaviour
 
     UnityWebRequest GetRequest(string keyword, int id)
     {
-        string addr2 = mSystemManager.AppData.Address + "/Load?keyword=" + keyword + "&id=" + id + "&src=" + mSystemManager.User.UserName;
+        string addr2 = mSystemManager.AppData.Address + "/Download?keyword=" + keyword + "&id=" + id + "&src=" + mSystemManager.User.UserName;
         UnityWebRequest request = new UnityWebRequest(addr2);
         request.method = "POST";
         request.downloadHandler = new DownloadHandlerBuffer();
@@ -132,7 +132,7 @@ public class DataCommunicator : MonoBehaviour
     }
     UnityWebRequest GetRequest(string keyword, int id, string src)
     {
-        string addr2 = mSystemManager.AppData.Address + "/Load?keyword=" + keyword + "&id=" + id + "&src=" + src;
+        string addr2 = mSystemManager.AppData.Address + "/Download?keyword=" + keyword + "&id=" + id + "&src=" + src;
         UnityWebRequest request = new UnityWebRequest(addr2);
         request.method = "POST";
         request.downloadHandler = new DownloadHandlerBuffer();
