@@ -166,6 +166,7 @@ public class ManipulationTest : MonoBehaviour
                     bPlaneHit = true;
                     
                 }//bRealObjecthit
+
                 if (bRealObjHit)
                 {
                     //가상 객체의 위치는 실제 객체의 오리진으로 설정함.
@@ -222,6 +223,7 @@ public class ManipulationTest : MonoBehaviour
                         }
 
                     }//bray
+                    //mText.text = keyword + " " + bPlaneHit + " " + bSend + " "+ bRay+" "+p.ToString();
                 }
                 
                 if (bSend)
@@ -258,6 +260,7 @@ public class ManipulationTest : MonoBehaviour
                         res += timeSpan2.TotalMilliseconds;
                         mEvalManager.mProcessTask.AddMessage(res);
                     }
+                    //mText.text = "2 = "+keyword + " " + bPlaneHit + " " + bSend;
                 }
                 if (phase == TouchPhase.Ended || bRealObjHit)
                 {

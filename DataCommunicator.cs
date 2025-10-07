@@ -147,11 +147,17 @@ public class DataCommunicator : MonoBehaviour
     }
     void OnEnable()
     {
-        UdpAsyncHandler.Instance.UdpDataReceived += Process;
+        if (!mSystemManager.AppData.UseTCP)
+            UdpAsyncHandler.Instance.UdpDataReceived += Process;
+        else
+            TcpAsyncHandler.Instance.TcpDataReceived += Process;
     }
     void OnDisable()
     {
-        UdpAsyncHandler.Instance.UdpDataReceived -= Process;
+        if (!mSystemManager.AppData.UseTCP)
+            UdpAsyncHandler.Instance.UdpDataReceived -= Process;
+        else
+            TcpAsyncHandler.Instance.TcpDataReceived -= Process;
     }
 
 
@@ -165,12 +171,14 @@ public class DataCommunicator : MonoBehaviour
             int size = e.bdata.Length;
             string msg = System.Text.Encoding.Default.GetString(e.bdata);
             UdpData data = JsonUtility.FromJson<UdpData>(msg);
+            
             StartCoroutine(MessageParsing(data));
             //StartCoroutine(MessageParsingWithNDK(data));
         }
         catch(Exception ex)
         {
-            mText.text = ex.ToString();
+            if(!mSystemManager.AppData.UseTCP)
+                mText.text = ex.ToString();
         }
     }
 

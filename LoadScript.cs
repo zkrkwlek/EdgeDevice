@@ -28,9 +28,19 @@ public class LoadScript : MonoBehaviour
         return true;
     }
 
+    string GetPublicDocumentsPath()
+    {
+        // Android 공용 Documents 폴더 경로
+#if UNITY_ANDROID && !UNITY_EDITOR
+            return Path.Combine("/storage/emulated/0/Documents", Application.productName);
+#else
+        return Application.persistentDataPath; // PC/Editor용
+#endif
+    }
+
     void Awake()
     {
-        dirPath = Application.persistentDataPath + "/data";
+        dirPath = GetPublicDocumentsPath() + "/data";
         filename = dirPath + "/Scripts.json";
         try
         {

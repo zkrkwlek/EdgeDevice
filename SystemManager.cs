@@ -49,6 +49,7 @@ public class ApplicationData
     public string UdpAddres;
     public int UdpPort;
     public int LocalPort;
+    public bool UseTCP;
     public int JpegQuality;
     public int numPyramids;
     public int numFeatures;
@@ -126,13 +127,24 @@ public class SystemManager : MonoBehaviour
         return true;
     }
 
+    string GetPublicDocumentsPath()
+    {
+        // Android 공용 Documents 폴더 경로
+#if UNITY_ANDROID && !UNITY_EDITOR
+            return Path.Combine("/storage/emulated/0/Documents", Application.productName);
+#else
+        return Application.persistentDataPath; // PC/Editor용
+#endif
+    }
+
     void Awake()
     {
         
         StartTime = new DateTime(2022, 1, 1, 0, 0, 0);
-        
+
         //var dirPath = Application.persistentDataPath + "/../../../../Download/ARFoundation/data";
-        var dirPath = Application.persistentDataPath + "/data";
+        //var dirPath = Application.persistentDataPath + "/data";
+        var dirPath = GetPublicDocumentsPath() + "/data";
         if (!Directory.Exists(dirPath))
         {
             Directory.CreateDirectory(dirPath);
@@ -198,7 +210,7 @@ public class SystemManager : MonoBehaviour
             User.numDatasetFileName = 0;
             User.UserName = "zkrkwleks20a";
             User.MapName = "TestMap";
-            User.SendKeywords = "Gyro,Accelerometer,DeviceConnect,DeviceDisconnect,DevicePosition,ContentGeneration,VO.SELECTION";
+            User.SendKeywords = "Image,Gyro,Accelerometer,DeviceConnect,DeviceDisconnect,DevicePosition,ContentGeneration,VO.SELECTION";
             User.ReceiveKeywords = "ReferenceFrame,single,ObjectDetection,single,PlaneLine,single,LocalContent,single";
             User.Experiments = "ReferenceFrame,Tracking,Content,ObjectDetection,Segmentation";
             User.LoadScripts = "";
@@ -229,10 +241,11 @@ public class SystemManager : MonoBehaviour
         catch (Exception)
         {
             AppData = new ApplicationData();
-            AppData.Address = "http://143.248.6.143:35005";
-            AppData.UdpAddres = "143.248.6.143";
+            AppData.Address = "http://143.248.6.25:35005";
+            AppData.UdpAddres = "143.248.6.25";
             AppData.UdpPort = 35001;
-            AppData.LocalPort = 40003;
+            AppData.LocalPort = 39999;
+            AppData.UseTCP = false;
             AppData.JpegQuality = 50;
             AppData.numSkipFrames = 3;
             AppData.numPyramids = 8;

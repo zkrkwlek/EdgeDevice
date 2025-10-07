@@ -62,7 +62,7 @@ public class PointCloudProcess : MonoBehaviour
     void Awake()
     {
         //파라메터 로드
-        dirPath = Application.persistentDataPath + "/data/Param";
+        dirPath = mParamManager.mPath;
         filename = dirPath + "/PointCloudManager.json";
         try
         {
@@ -73,6 +73,7 @@ public class PointCloudProcess : MonoBehaviour
         catch (Exception e)
         {
             mPointParam = new PointCloudManagerParam();
+            mPointParam.bVisualization = true;
             mPointParam.nMode = 1;
         }
         if (!mPointParam.bVisualization)

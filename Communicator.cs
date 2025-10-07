@@ -67,6 +67,10 @@ public class Communicator : MonoBehaviour
         request3.downloadHandler = new DownloadHandlerBuffer();
         UnityWebRequestAsyncOperation res3 = request3.SendWebRequest();
 
+        bool UseTCP = mSystemManager.AppData.UseTCP;
+        if (UseTCP)
+            TcpAsyncHandler.Instance.TcpSocketClose();
+
         DisconnectDevice();
 
         while (!request.downloadHandler.isDone)//&& !request3.downloadHandler.isDone
@@ -83,13 +87,28 @@ public class Communicator : MonoBehaviour
     void OnEnable()
     {
         CameraInitEvent.camInitialized += OnCameraInitialization;
+        if(mSystemManager.AppData.UseTCP)
+            TcpAsyncHandler.Instance.TcpConnected += OnTcpConnected;
+
     }
     void OnDisable()
     {
         CameraInitEvent.camInitialized -= OnCameraInitialization;
+        if (mSystemManager.AppData.UseTCP)
+            TcpAsyncHandler.Instance.TcpConnected -= OnTcpConnected;
     }
 
     bool bCamInit = false;
+
+    void OnTcpConnected(object sender, EventArgs e)
+    {
+        string[] keywords = mSystemManager.User.ReceiveKeywords.Split(',');
+        for (int i = 0; i < keywords.Length; i += 2)
+        {
+            TcpAsyncHandler.Instance.Send(mSystemManager.User.UserName, keywords[i], "connect", keywords[i + 1]);
+        }
+    }
+       
     void OnCameraInitialization(object Sender, CameraInitEventArgs e)
     {
 
@@ -187,13 +206,23 @@ public class Communicator : MonoBehaviour
 
             ////알람 서버에 등록
             ApplicationData appData = mSystemManager.AppData;
-            UdpAsyncHandler.Instance.UdpSocketBegin(appData.UdpAddres, appData.UdpPort, appData.LocalPort);
+            bool useTCP = appData.UseTCP;
+            if (!useTCP)
+                UdpAsyncHandler.Instance.UdpSocketBegin(appData.UdpAddres, appData.UdpPort, appData.LocalPort);
+            else
+                TcpAsyncHandler.Instance.TcpSocketConnect(appData.UdpAddres, appData.UdpPort + 1);
+
             if (mExperimentSetup.rKeywords.Length > 0)
                 mSystemManager.User.ReceiveKeywords += mExperimentSetup.rKeywords;
             string[] keywords = mSystemManager.User.ReceiveKeywords.Split(',');
             for (int i = 0; i < keywords.Length; i += 2)
             {
-                UdpAsyncHandler.Instance.Send(mSystemManager.User.UserName, keywords[i], "connect", keywords[i + 1]);
+                int a = 0;
+                if(!useTCP)
+                    a = UdpAsyncHandler.Instance.Send(mSystemManager.User.UserName, keywords[i], "connect", keywords[i + 1]);
+                //else
+                //    a = TcpAsyncHandler.Instance.Send(mSystemManager.User.UserName, keywords[i], "connect", keywords[i + 1]);
+                //mText.text = a + " "+ keywords[i];
             }
             
             ////데이터 서버에 등록
@@ -203,7 +232,7 @@ public class Communicator : MonoBehaviour
             string msg = JsonUtility.ToJson(data);
             byte[] bdata = System.Text.Encoding.UTF8.GetBytes(msg);
 
-            UnityWebRequest request = new UnityWebRequest(mSystemManager.AppData.Address + "/Connect?port=40003");
+            UnityWebRequest request = new UnityWebRequest(mSystemManager.AppData.Address + "/Connect?port=39999");
             request.method = "POST";
             UploadHandlerRaw uH = new UploadHandlerRaw(bdata);
             uH.contentType = "application/json";

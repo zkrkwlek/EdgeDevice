@@ -104,7 +104,10 @@ public class ParameterManager : MonoBehaviour
     ObjectParam mObjParam;
     DrawPaintParam mDrawParam;
     Param mTimeServerParam;
-    
+
+    [HideInInspector]
+    public string mPath;
+
     bool WantsToQuit()
     {
         if (mExperimentParam.bLocalizationTest && !mExperimentParam.bEdgeBase)
@@ -131,10 +134,21 @@ public class ParameterManager : MonoBehaviour
         return true;
     }
 
+    string GetPublicDocumentsPath()
+    {
+        // Android 공용 Documents 폴더 경로
+#if UNITY_ANDROID && !UNITY_EDITOR
+            return Path.Combine("/storage/emulated/0/Documents", Application.productName);
+#else
+        return Application.persistentDataPath; // PC/Editor용
+#endif
+    }
+
     void Awake()
     {
         DictionaryParam = new Dictionary<string, Param>();
-        dirPath = Application.persistentDataPath + "/data/Param";
+        dirPath = GetPublicDocumentsPath() + "/data/Param";
+        mPath = dirPath;
 
         //카메라 파라메터
 

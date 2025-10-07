@@ -140,14 +140,14 @@ public class UdpAsyncHandler
         //UdpDataReceived -= UdpDataReceivedProcess;
     }
 
-    public void Send(string src, string keyword, string method, string type)
+    public int Send(string src, string keyword, string method, string type)
     {
         UdpData data = new UdpData(keyword, method, src);
         data.type2 = type;
         string msg = JsonUtility.ToJson(data);
         byte[] bdata = System.Text.Encoding.UTF8.GetBytes(msg);
-        stat.udp.Send(bdata, bdata.Length, stat.hep);
-                
+        int res = stat.udp.Send(bdata, bdata.Length, stat.hep);
+        return res;             
     }
     
     private void EchoData(string v1, string v2)

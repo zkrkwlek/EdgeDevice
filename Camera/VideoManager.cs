@@ -80,6 +80,16 @@ public class VideoManager : MonoBehaviour
         rawImage.color = new Vector4(0f, 0f, 0f, 0f);
     }
 
+    string GetPublicDocumentsPath()
+    {
+        // Android 공용 Documents 폴더 경로
+#if UNITY_ANDROID && !UNITY_EDITOR
+            return Path.Combine("/storage/emulated/0/Documents", Application.productName);
+#else
+        return Application.persistentDataPath; // PC/Editor용
+#endif
+    }
+
     void Awake()
     {
         //VideoParam testParam = new VideoParam();
@@ -92,14 +102,14 @@ public class VideoManager : MonoBehaviour
         //Debug.Log(JsonUtility.ToJson(testParam));
 
         //파라메터 로드
-        dirPath = Application.persistentDataPath + "/data/Param";
+        dirPath = GetPublicDocumentsPath() + "/data/Param";
         filename = dirPath + "/VideoManager.json";
         
         if (!Directory.Exists(dirPath))
         {
             Directory.CreateDirectory(dirPath);
         }
-        var dirPath2 = Application.persistentDataPath + "/data/video";
+        var dirPath2 = GetPublicDocumentsPath() + "/data/video";
         try
         {
             string strAddData = File.ReadAllText(filename);
