@@ -28,7 +28,7 @@ public class CamParam : Param
 public class ObjectParam : Param
 {
     public float fWalkingObjScale;
-    public float fTempObjScale;
+    public float[] fTempObjScale;
     public Color objColor;
 }
 [Serializable]
@@ -233,6 +233,9 @@ public class ParameterManager : MonoBehaviour
         {
             mObjParam = new ObjectParam();
             mObjParam.fWalkingObjScale = 0.2f;
+            mObjParam.fTempObjScale = new float[2];
+            mObjParam.fTempObjScale[0] = 1.0f;
+            mObjParam.fTempObjScale[1] = 1.0f;
         }
         //파라메터 로드
 

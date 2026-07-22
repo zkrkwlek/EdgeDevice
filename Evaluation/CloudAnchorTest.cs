@@ -174,7 +174,7 @@ public class CloudAnchorTest : MonoBehaviour
         if (mExperimentParam.bManipulationTest)
             bMarkerDetected = true;
         mObjParam = (ObjectParam)mParamManager.DictionaryParam["VirtualObject"];
-        scale = mObjParam.fTempObjScale;
+        scale = mObjParam.fTempObjScale[0];
         mResolvedAnchors = new Dictionary<int, string>();
         mAnchorObjects = new Dictionary<int, GameObject>();
         Application.wantsToQuit += WantsToQuit;

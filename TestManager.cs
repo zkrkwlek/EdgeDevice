@@ -75,11 +75,15 @@ public class TestManager : MonoBehaviour
     }
 
     ////마커 전송할 때의 아이디 기록
+    bool bUseGS = false;
     bool bSendImage = false;
     int prevID = -1;
     //이미지 전송
     void OnCameraFrameReceived(object sender, ImageCatchEventArgs e) {
         try {
+
+            //bUseGS = mSystemManager.AppData.UseGS;
+
             var frameID = e.mnFrameID;
 
             if (!bEdgeBase)
@@ -139,6 +143,16 @@ public class TestManager : MonoBehaviour
                 StartCoroutine(mSender.SendData(idata));
                 bSendImage = false;
 
+                if(bUseGS)
+                {
+                    byte[] bdata = new byte[48];
+                    UdpData idata2 = new UdpData("FrameUpdate", mSystemManager.User.UserName, frameID, bdata, 0.0f);
+                    UdpData idata3 = new UdpData("reqdetect",mSystemManager.User.UserName+".GSImage", frameID, bdata, 0f);
+                    StartCoroutine(mSender.SendData(idata2));
+                    StartCoroutine(mSender.SendData(idata3));
+                    mText.text = "??????";
+                }
+
                 //여기서 이미지를 저장하는게 나을지도 모름.
                 IntPtr addr2 = (IntPtr)e.rgbMat.dataAddr();
                 StoreImage(frameID, addr2);
@@ -182,10 +196,15 @@ public class TestManager : MonoBehaviour
         }
         
         var mCamParam = (CamParam)mParamManager.DictionaryParam["Camera"];
+        
         if (mCamParam.bCaptureDepth)
             keyword = "DImage";
         else
             keyword = "Image";
+        bUseGS = mSystemManager.AppData.UseGS;
+        if (bUseGS) {
+            keyword = "GS" + keyword;
+        }
 
         bEdgeBase = mExParam.bEdgeBase;
         bCoordAlign = mExParam.bCoordAlign;

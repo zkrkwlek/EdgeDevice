@@ -42,11 +42,23 @@ public class Communicator : MonoBehaviour
     public ExperimentSetup mExperimentSetup;
     public Text mText;
 
+    string strKeywordConnect = "DeviceConnect";
+    string strKeywordDisconnect = "DeviceDisconnect";
+
+    void Awake()
+    {
+        if(mSystemManager.AppData.UseGS)
+        {
+            strKeywordConnect = "GS" + strKeywordConnect;
+            strKeywordDisconnect = "GS" + strKeywordDisconnect;
+        }
+    }
+
     //void OnApplicationQuit() {
     bool WantsToQuit() {
         //Application.CancelQuit();
         ////Device & Map store
-        string addr2 = mSystemManager.AppData.Address + "/Upload?keyword=DeviceDisconnect&id=0&src=" + mSystemManager.User.UserName;
+        string addr2 = mSystemManager.AppData.Address + "/Upload?keyword="+strKeywordDisconnect+"&id=0&src=" + mSystemManager.User.UserName;
         string msg2 = mSystemManager.User.UserName + "," + mSystemManager.User.MapName;
         byte[] bdata = System.Text.Encoding.UTF8.GetBytes(msg2);
 
@@ -271,7 +283,7 @@ public class Communicator : MonoBehaviour
             //ÇÃ·¡±×
             Buffer.BlockCopy(bdatab, 0, bdata2, nbFlagIdx + nByte, bdatab.Length);
 
-            UdpData deviceConnectData = new UdpData("DeviceConnect", mSystemManager.User.UserName, 0, bdata2, ts);
+            UdpData deviceConnectData = new UdpData(strKeywordConnect, mSystemManager.User.UserName, 0, bdata2, ts);
             StartCoroutine(sender.SendData(deviceConnectData));
             //mText.text = "success connect!!! " + mSystemManager.FocalLengthX+" "+mSystemManager.FocalLengthY;
         }

@@ -50,6 +50,7 @@ public class ApplicationData
     public int UdpPort;
     public int LocalPort;
     public bool UseTCP;
+    public bool UseGS;
     public int JpegQuality;
     public int numPyramids;
     public int numFeatures;
@@ -137,6 +138,7 @@ public class SystemManager : MonoBehaviour
 #endif
     }
 
+    
     void Awake()
     {
         
@@ -210,7 +212,7 @@ public class SystemManager : MonoBehaviour
             User.numDatasetFileName = 0;
             User.UserName = "zkrkwleks20a";
             User.MapName = "TestMap";
-            User.SendKeywords = "Image,Gyro,Accelerometer,DeviceConnect,DeviceDisconnect,DevicePosition,ContentGeneration,VO.SELECTION";
+            User.SendKeywords = "Gyro,Accelerometer,DevicePosition,ContentGeneration,VO.SELECTION";
             User.ReceiveKeywords = "ReferenceFrame,single,ObjectDetection,single,PlaneLine,single,LocalContent,single";
             User.Experiments = "ReferenceFrame,Tracking,Content,ObjectDetection,Segmentation";
             User.LoadScripts = "";
@@ -246,6 +248,7 @@ public class SystemManager : MonoBehaviour
             AppData.UdpPort = 35001;
             AppData.LocalPort = 39999;
             AppData.UseTCP = false;
+            AppData.UseGS = false;
             AppData.JpegQuality = 50;
             AppData.numSkipFrames = 3;
             AppData.numPyramids = 8;
@@ -254,6 +257,14 @@ public class SystemManager : MonoBehaviour
             AppData.numLocalKeyFrames = 50;
             AppData.numContentKFs = 20;
             File.WriteAllText(dirPath + "/AppData.json", JsonUtility.ToJson(AppData));
+        }
+
+        if(AppData.UseGS)
+        {
+            User.SendKeywords = "GSImage,GSDeviceConnect,GSDeviceDisconnect,reqdetect,FrameUpdate," + User.SendKeywords;
+        }
+        else {
+            User.SendKeywords = "Image,DeviceConnect,DeviceDisconnect," + User.SendKeywords;
         }
 
         //IntrinsicData = new float[13];

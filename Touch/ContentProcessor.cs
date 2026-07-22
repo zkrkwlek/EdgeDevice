@@ -10,7 +10,8 @@ public class ContentProcessor : MonoBehaviour
 {
     public Text mText;
     public GameObject pathObjPrefab;
-    public GameObject tempObjPrefab;
+    public GameObject tempObjPrefab1, tempObjPrefab2;
+    List<GameObject> vecObjPrefabs;
     public ParameterManager mParamManager;
     public EvaluationManager mEvalManager;
     public PlaneManager mPlaneManager;
@@ -26,9 +27,13 @@ public class ContentProcessor : MonoBehaviour
 
     void Awake()
     {
+        vecObjPrefabs = new List<GameObject>();
+        vecObjPrefabs.Add(tempObjPrefab1);
+        vecObjPrefabs.Add(tempObjPrefab2);
+
         mObjParam = (ObjectParam)mParamManager.DictionaryParam["VirtualObject"];
         mDrawParam = (DrawPaintParam)mParamManager.DictionaryParam["DrawPaint"];
-        mContentManager = new ContentManager(mEvalManager,tempObjPrefab,pathObjPrefab);
+        mContentManager = new ContentManager(mEvalManager,tempObjPrefab1,pathObjPrefab);
         //mPathManager = new PathContentManager();
         //mDrawManager = new DrawContentManager();
         //mDrawManager.mDrawParam = mDrawParam;
@@ -37,6 +42,7 @@ public class ContentProcessor : MonoBehaviour
         //실제 객체도 추가해야 하는데 이건 어떻게?
         //오브젝트 매니저의 리얼 오브젝트도 이용해야함.
         ConnectedGraph = new Dictionary<int, int>();
+
     }
     void Start()
     {
@@ -50,6 +56,7 @@ public class ContentProcessor : MonoBehaviour
             int len = (int)fdata[idx++];
             int id = (int)fdata[idx++];
             int type = (int)fdata[idx++];
+            int prefabid = (int)fdata[idx++];
             
             if ((ContentType)type == ContentType.Object)
             {
@@ -70,8 +77,12 @@ public class ContentProcessor : MonoBehaviour
                         node.dstObj = mObjManager.RealObjDict[sgDstID];
                     }
                 }
+
+                GameObject tmpObj = vecObjPrefabs[prefabid];
+                mText.text = "scale = " + scale;
                 //mText.text = id+" == "+sgDstID + " " + sgType+" "+ sgAttr + " " + sgSrcID+" ";
-                return mContentManager.Process(node, id, type, tempObjPrefab, c, pos, scale, startTime, _b, mText).GetComponent<Content>();
+                //mText.text = prefabid + " " + tmpObj.ToString();
+                return mContentManager.Process(node, id, type, tmpObj, c, pos, scale, startTime, _b, mText).GetComponent<Content>();
             }
             if ((ContentType)type == ContentType.Draw)
             {
@@ -137,8 +148,6 @@ public class ContentProcessor : MonoBehaviour
             //3+Nc 실제 데이터 정보
             //var newVF = new VirtualFrame(fid);
 
-            //mText.text = "content test = " + Nconnect + " " + Ncontent;
-
             int Nconnect = (int)fdata[idx+2];
             int Ncontent = (int)fdata[idx+3 + Nconnect];
             int cidx = idx+4+Nconnect;
@@ -146,6 +155,7 @@ public class ContentProcessor : MonoBehaviour
             var newVF = mVOFrameManager.GetFrame(fid);
             Color color = Color.white;
 
+            //mText.text = "content test = " + Nconnect + " " + Ncontent + "=="+(int)fdata[cidx];
             for (int j = 0; j < Ncontent; j++)
             {
                 int len = (int)fdata[cidx];

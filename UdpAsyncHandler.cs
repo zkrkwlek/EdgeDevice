@@ -26,6 +26,7 @@ public class UdpData
         type1 = _type;
         src = _src;
     }
+    
     ///데이터 저장용
     //public UdpData(string _key, string _src, int _id, double _ts)
     //{

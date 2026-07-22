@@ -94,7 +94,7 @@ public class UVRSpatialTest : MonoBehaviour
             }
             mAnchorObjects = new Dictionary<int, GameObject>();
             mObjParam = (ObjectParam)mParamManager.DictionaryParam["VirtualObject"];
-            scale = mObjParam.fTempObjScale;
+            scale = mObjParam.fTempObjScale[0];
 
             Application.wantsToQuit += WantsToQuit;
 

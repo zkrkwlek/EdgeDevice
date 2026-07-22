@@ -98,12 +98,15 @@ public class ManipulationTest : MonoBehaviour
 
     DateTime startTime;
     int touchID = 0;
+    float nPrefabId = 0;
     GameObject touchObject = null;
     void Update()
     {
         int nTouchCount = Input.touchCount;
 
-        if (nTouchCount == 1)
+        
+
+        if (nTouchCount > 0 && nTouchCount < 3)
         {
             try {
                 startTime = DateTime.UtcNow;
@@ -128,6 +131,7 @@ public class ManipulationTest : MonoBehaviour
                     else
                     {
                         voState = VirtualObjectManipulationState.Registration;
+                        nPrefabId = nTouchCount - 1;
                     }
                 }
                 if (bObjectHit)
@@ -234,8 +238,9 @@ public class ManipulationTest : MonoBehaviour
                     //Buffer.BlockCopy(fdata, 0, bdata, 0, bdata.Length); //전체 실수형 데이터 수
 
                     //신그래프 : 가상, 특성, 구조물
-                    //자기 자신 포함 : length+id+type +3xvector3+scale
-                    byte[] bdata2 = ContentData.Generate(17f, sendID, (float)ContentType.Object, newPos.x, newPos.y, newPos.z, axis.x, axis.y, axis.z, mObjParam.objColor.r, mObjParam.objColor.g, mObjParam.objColor.b, mObjParam.fTempObjScale, (float)sgSrcId, (float)sgattr, (float)sgtype, (float)sgDstId);
+                    //자기 자신 포함 : length+id+type+prefab type +3xvector3+scale
+                    float fObjScale = mObjParam.fTempObjScale[(int)nPrefabId];
+                    byte[] bdata2 = ContentData.Generate(18f, sendID, (float)ContentType.Object, nPrefabId, newPos.x, newPos.y, newPos.z, axis.x, axis.y, axis.z, mObjParam.objColor.r, mObjParam.objColor.g, mObjParam.objColor.b, fObjScale, (float)sgSrcId, (float)sgattr, (float)sgtype, (float)sgDstId);
                     UdpData mdata = new UdpData(keyword, mSystemManager.User.UserName, sendID, bdata2, 1.0);
                     StartCoroutine(mSender.SendData(mdata));
 
@@ -271,6 +276,7 @@ public class ManipulationTest : MonoBehaviour
             catch(Exception ex)
             {
                 touchObject = null;
+                nPrefabId = 0f;
                 voState = VirtualObjectManipulationState.None;
                 mText.text = ex.ToString();
             }

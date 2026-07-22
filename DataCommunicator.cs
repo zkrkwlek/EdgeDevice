@@ -66,7 +66,7 @@ public class DataCommunicator : MonoBehaviour
     {
         data.sendedTime = DateTime.UtcNow;
         
-        UnityWebRequest req = SetRequest(data.keyword, data.data, data.id, data.ts);
+        UnityWebRequest req = SetRequest(data.keyword, data.src, data.data, data.id, data.ts);
         yield return req.SendWebRequest();
         
         if (mEvalManager.bLatency)
@@ -87,9 +87,9 @@ public class DataCommunicator : MonoBehaviour
 
     }
 
-    UnityWebRequest SetRequest(string keyword, byte[] data, int id, double ts)
+    UnityWebRequest SetRequest(string keyword, string src, byte[] data, int id, double ts)
     {
-        string addr2 = mSystemManager.AppData.Address + "/Upload?keyword=" + keyword + "&id=" + id + "&ts=" + ts + "&src=" + mSystemManager.User.UserName;
+        string addr2 = mSystemManager.AppData.Address + "/Upload?keyword=" + keyword + "&id=" + id + "&ts=" + ts + "&src=" + src;
         //string addr2 = strAddr + "/Store?keyword=" + keyword + "&id=" + id + "&ts=" + ts + "&src=" + strUser;
         //if (ts > 0.0)
         //addr2 += "&type2=" + ts;
